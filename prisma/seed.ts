@@ -19,7 +19,7 @@ async function main() {
     data: {
       email: "admin@example.com",
       name: "Admin User",
-      password: "$2b$10$devinTaskBoardPlaceholderHash",
+      password: "$2b$10$9LMNYnaJ.ydBC8Ixhf3TKe2e3wRhJzLZvADooCk16ZzW1xbnjyLwq",
       role: "ADMIN",
       locale: "ja",
       theme: "SYSTEM",
@@ -30,7 +30,7 @@ async function main() {
     data: {
       email: "member@example.com",
       name: "Member User",
-      password: "$2b$10$devinTaskBoardPlaceholderHash",
+      password: "$2b$10$9LMNYnaJ.ydBC8Ixhf3TKe2e3wRhJzLZvADooCk16ZzW1xbnjyLwq",
       role: "MEMBER",
       locale: "ja",
       theme: "SYSTEM",
