@@ -1,15 +1,11 @@
 # devin-task-board
 
-Next.js 16 + PostgreSQL + Prisma + Tailwind CSS v4 + shadcn/ui を使ったタスク管理アプリの開発基盤です。
+PostgreSQL + Prisma + Docker Compose を中心にした開発基盤です。Next.js の初期生成物は一度削除しています。
 
 ## Tech Stack
 
-- Next.js 16 (App Router)
-- React 19 + TypeScript
 - PostgreSQL 16
 - Prisma ORM
-- Tailwind CSS v4
-- shadcn/ui (CLI v4 設定)
 
 ## Setup (Docker)
 
@@ -25,11 +21,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-3. 別ターミナルで DB スキーマ適用（初回のみ）
-
-```bash
-docker compose exec app npm run db:push
-```
+3. 初回起動時に既存 migration が自動適用される
 
 4. Seed データ投入（任意）
 
@@ -37,20 +29,20 @@ docker compose exec app npm run db:push
 docker compose exec app npm run prisma:seed
 ```
 
-アプリ: `http://localhost:3000`
+DB: `http://localhost:5432`
 
 ## Setup (Local)
 
 ```bash
 npm install
 npm run prisma:generate
-npm run dev
+npm run prisma:deploy
 ```
+
+スキーマ変更時は `npm run prisma:migrate -- --name <migration_name>` を使用します。
 
 ## Project Structure (bootstrap)
 
-- `src/app/` Next.js App Router
 - `src/lib/prisma.ts` Prisma シングルトン
 - `prisma/schema.prisma` Prisma schema
 - `docker-compose.yml` app + db
-- `src/app/globals.css` OKLCH + `@theme inline` カラー定義
