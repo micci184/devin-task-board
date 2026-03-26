@@ -57,7 +57,8 @@ users ─┬─< project_members >── projects
 | projectId | String                              | FK → projects      |
 | userId    | String                              | FK → users         |
 | role      | Enum (OWNER, ADMIN, MEMBER, VIEWER) | プロジェクト内権限 |
-| joinedAt  | DateTime                            |                    |
+| createdAt | DateTime                            |                    |
+| updatedAt | DateTime                            |                    |
 
 ### tasks
 
