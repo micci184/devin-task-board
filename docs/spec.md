@@ -20,7 +20,7 @@ users ─┬─< project_members >── projects
        └─< audit_logs
 ```
 
-正式な ERD は Mermaid 形式で docs/erd.md に作成する（Issue #1）。
+正式な ERD は Mermaid 形式で docs/erd.md に作成する（Issue #8）。
 
 ### users
 

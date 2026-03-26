@@ -1,48 +1,44 @@
 # devin-task-board
 
-PostgreSQL + Prisma + Docker Compose を中心にした開発基盤です。Next.js の初期生成物は一度削除しています。
+Next.js 16 + PostgreSQL + Prisma + Tailwind CSS v4 のタスク管理アプリ。
 
 ## Tech Stack
 
-- PostgreSQL 16
-- Prisma ORM
+- Next.js 16.2（App Router）+ React 19 + TypeScript
+- PostgreSQL 16 + Prisma ORM
+- Tailwind CSS v4
+- Docker Compose
 
 ## Setup (Docker)
 
-1. 環境変数ファイルを作成
-
 ```bash
 cp .env.example .env
-```
-
-2. 開発環境を起動
-
-```bash
 docker compose up --build
 ```
 
-3. 初回起動時に既存 migration が自動適用される
+- アプリ: http://localhost:3000
+- DB: localhost:5432
 
-4. Seed データ投入（任意）
-
-```bash
-docker compose exec app npm run prisma:seed
-```
-
-DB: `http://localhost:5432`
+初回起動時に Prisma migration が自動適用されます。
 
 ## Setup (Local)
 
 ```bash
+cp .env.example .env
 npm install
-npm run prisma:generate
-npm run prisma:deploy
+npx prisma generate
+npx prisma migrate dev
+npm run dev
 ```
 
-スキーマ変更時は `npm run prisma:migrate -- --name <migration_name>` を使用します。
+## Project Structure
 
-## Project Structure (bootstrap)
-
-- `src/lib/prisma.ts` Prisma シングルトン
-- `prisma/schema.prisma` Prisma schema
-- `docker-compose.yml` app + db
+```
+src/app/layout.tsx       # ルートレイアウト
+src/app/page.tsx         # トップページ
+src/app/globals.css      # Tailwind CSS
+src/lib/prisma.ts        # Prisma シングルトン
+prisma/schema.prisma     # DB スキーマ
+docker-compose.yml       # app + db
+Dockerfile               # Node.js 22 Alpine
+```

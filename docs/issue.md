@@ -64,7 +64,7 @@
 
 | #   | タイトル                                                                         | Labels                                      |
 | --- | -------------------------------------------------------------------------------- | ------------------------------------------- |
-| 1   | 環境構築（Docker Compose, Next.js 16, PostgreSQL, Prisma, shadcn/ui）            | `phase:0`, `priority:high`, `feature:infra` |
+| 1   | 環境構築（Docker Compose, Next.js 16, PostgreSQL, Prisma, Tailwind CSS v4）      | `phase:0`, `priority:high`, `feature:infra` |
 | 2   | globals.css カラー定義（OKLCH + @theme inline）                                  | `phase:0`, `priority:high`, `feature:ui`    |
 | 3   | Prisma スキーマ + seed データ                                                    | `phase:0`, `priority:high`, `feature:infra` |
 | 4   | Auth.js v5 + 認証画面（ログイン / サインアップ / パスワードリセット / proxy.ts） | `phase:0`, `priority:high`, `feature:auth`  |
