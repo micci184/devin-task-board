@@ -5,12 +5,14 @@ trigger: always_on
 # devin-task-board Rules
 
 ## プロジェクト概要
-リッチなタスク管理アプリ（Jira ミニ版）。Docker Compose + Next.js 16 + PostgreSQL + Prisma + shadcn/ui。
+
+リッチなタスク管理アプリ（Jira ミニ版）。Docker Compose + Next.js 16 + PostgreSQL + Prisma。
 
 ## 技術スタック（厳守）
+
 - Next.js 16.2（App Router）、React 19、TypeScript 必須
 - PostgreSQL 16 + Prisma ORM
-- Tailwind CSS v4 + shadcn/ui CLI v4（OKLCH色空間）
+- Tailwind CSS v4（OKLCH色空間）
 - Auth.js v5（next-auth@5、Credentials Provider）
 - next-intl（ja / en）
 - zod（フォーム + API バリデーション）
@@ -21,6 +23,7 @@ trigger: always_on
 - 状態管理ライブラリ（Redux, Zustand 等）は使わない
 
 ## Agent Skills
+
 `npx skills add vercel-labs/next-skills` でインストール済み。
 Next.js のベストプラクティス（RSC境界、async API、ファイル規約等）は
 `.agents/skills/` 内の SKILL.md および `node_modules/next/dist/docs/` を参照すること。
@@ -33,7 +36,7 @@ src/app/(main)/          # 認証必須（dashboard, projects, notifications, se
 src/app/api/             # OpenAPI 3.1 準拠の Route Handlers
 src/app/globals.css      # カラー定義（OKLCH + @theme inline）
 src/app/proxy.ts         # 認証ガード（Next.js 16: 旧 middleware.ts）
-src/components/ui/       # shadcn/ui（CLI v4 自動生成、直接編集しない）
+src/components/ui/       # 共通UIコンポーネント
 src/components/layout/   # Header, Sidebar
 src/components/tasks/    # TaskCard, TaskForm, TaskDetail
 src/components/board/    # KanbanBoard, KanbanColumn
@@ -52,6 +55,7 @@ prisma/schema.prisma     # DB スキーマ定義
 ```
 
 ## カラー定義（globals.css で CSS変数として定義）
+
 tailwind.config は編集しない。色は globals.css の `:root` と `.dark` に OKLCH で定義し、
 `@theme inline` でTailwindユーティリティに公開する。
 
@@ -74,6 +78,7 @@ tailwind.config は編集しない。色は globals.css の `:root` と `.dark` 
 ```
 
 ## API設計
+
 - OpenAPI 3.1 仕様を `docs/openapi.yaml` に定義し、それに準拠して実装する
 - エンドポイント: `/api/[resource]`、REST
 - レスポンス形式: 成功 `{ data: T }` / エラー `{ error: { code: string, message: string } }`
@@ -81,6 +86,7 @@ tailwind.config は編集しない。色は globals.css の `:root` と `.dark` 
 - ステータスコード: 400（バリデーション）、401（認証）、403（権限）、404（Not Found）
 
 ## コーディング規約
+
 - `any` 型禁止。型は `src/types/` に集約
 - コンポーネント: PascalCase、フック: camelCase、ディレクトリ: kebab-case
 - Server Components がデフォルト。`"use client"` は末端のみ
@@ -90,28 +96,46 @@ tailwind.config は編集しない。色は globals.css の `:root` と `.dark` 
 - Tailwind ユーティリティのみ使用。インラインスタイル・CSS Modules 禁止
 - ダークモード: Tailwind `dark:` バリアント + next-themes（ThemeProvider）
 
+## Issue駆動の実装範囲
+
+- 実装対象は、対象Issueの「概要」「Acceptance Criteria」「技術的な参考情報」に含まれる範囲のみとする
+- `docs/spec.md` と `docs/user-stories.md` は参照資料であり、対象Issueに記載のない後続機能や将来構成を先回りして実装しない
+- スコープ判断に迷う場合は、Issueの記載を優先し、不明点は確認する
+- PRには対象Issueに直接関係しない変更（リファクタ、将来用ディレクトリ、未使用設定、別Issue相当の追加）を含めない
+
+## PR差分原則
+
+- PRの差分は、対象Issueの実装に直接関係する変更のみとする
+- PRの差分には、対象Issueに直接関係しない変更（リファクタ、将来用ディレクトリ、未使用設定、別Issue相当の追加）を含めない
+- PRの差分は、対象Issueの実装に必要な変更のみとする
+
 ## Next.js 16 の注意点
+
 - `middleware.ts` は非推奨 → `proxy.ts` にリネーム（Edge Runtime 非対応）
 - async Request API: `params`, `searchParams`, `cookies()`, `headers()` は必ず await
 - Turbopack 設定は `nextConfig.turbopack` に（`experimental.turbopack` は非推奨）
 - Cache Components: `'use cache'` ディレクティブ + `cacheLife()` + `cacheTag()`
 
 ## DB設計
+
 - Prisma model: PascalCase 単数形。全テーブルに id(cuid), createdAt, updatedAt
 - 外部キー: 適切に ON DELETE CASCADE
 - インデックス: status, priority, assigneeId, projectId
 - ソフトデリート不採用（物理削除）
+- 開発環境のDB適用は `prisma migrate dev` を使用し、既存 migration の反映は `prisma migrate deploy` を使用する
 
 ## エラーハンドリング
 
-- UI: sonner トースト + shadcn/ui Skeleton
+- UI: sonner トースト + Skeleton
 - API: 統一レスポンス形式 { error: { code, message } }
 
 ## コミット規約
+
 Conventional Commits: `type(scope): description`
 type: feat, fix, docs, style, refactor, test, chore
 
 ## 禁止事項
+
 - `any` 型、`console.log` のコミット、インラインスタイル、CSS Modules
 - Redux / Zustand / Jotai 等の状態管理ライブラリ
 - `pages/` ディレクトリ、`getServerSideProps` / `getStaticProps`
