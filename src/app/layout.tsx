@@ -1,5 +1,8 @@
 import "./globals.css";
 
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { SessionProvider } from "@/components/layout/SessionProvider";
+
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,8 +16,19 @@ const RootLayout = ({
   children: React.ReactNode;
 }>) => {
   return (
-    <html lang="ja">
-      <body>{children}</body>
+    <html lang="ja" suppressHydrationWarning>
+      <body>
+        <SessionProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </SessionProvider>
+      </body>
     </html>
   );
 };
