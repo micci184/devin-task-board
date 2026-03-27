@@ -21,6 +21,24 @@ components:
 
   schemas:
     # ── 共通 ──
+    ErrorCode:
+      type: string
+      description: |
+        アプリケーション全体で使用されるエラーコード一覧:
+        - VALIDATION_ERROR: リクエストのバリデーション失敗（400）
+        - UNAUTHORIZED: 未認証（401）
+        - FORBIDDEN: 権限不足（403）
+        - NOT_FOUND: リソース未発見（404）
+        - CONFLICT: リソース競合（409）
+        - INTERNAL_ERROR: サーバー内部エラー（500）
+      enum:
+        - VALIDATION_ERROR
+        - UNAUTHORIZED
+        - FORBIDDEN
+        - NOT_FOUND
+        - CONFLICT
+        - INTERNAL_ERROR
+
     Error:
       type: object
       required:
@@ -33,14 +51,7 @@ components:
             - message
           properties:
             code:
-              type: string
-              description: エラーコード
-              examples:
-                - VALIDATION_ERROR
-                - UNAUTHORIZED
-                - FORBIDDEN
-                - NOT_FOUND
-                - INTERNAL_ERROR
+              $ref: "#/components/schemas/ErrorCode"
             message:
               type: string
               description: 人間が読めるエラーメッセージ
@@ -57,21 +68,26 @@ components:
       properties:
         page:
           type: integer
+          minimum: 1
           description: 現在のページ番号
           examples:
             - 1
         perPage:
           type: integer
+          minimum: 1
+          maximum: 100
           description: 1ページあたりの件数
           examples:
             - 20
         total:
           type: integer
+          minimum: 0
           description: 全件数
           examples:
             - 100
         totalPages:
           type: integer
+          minimum: 0
           description: 全ページ数
           examples:
             - 5
@@ -99,6 +115,8 @@ components:
         name:
           type: string
           description: 表示名
+          minLength: 1
+          maxLength: 255
         avatarUrl:
           type:
             - string
@@ -113,7 +131,7 @@ components:
         locale:
           type: string
           description: 言語設定
-          examples:
+          enum:
             - ja
             - en
         theme:
@@ -129,6 +147,25 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    UserSummary:
+      type: object
+      description: ユーザーの要約情報（リレーション展開用）
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: ユーザーID（cuid）
+        name:
+          type: string
+          description: 表示名
+        avatarUrl:
+          type:
+            - string
+            - "null"
+          description: プロフィール画像URL
 
     # ── Project ──
     Project:
@@ -154,7 +191,7 @@ components:
           description: 説明
         key:
           type: string
-          description: プロジェクトキー（例: DTB）
+          description: "プロジェクトキー（例: DTB）"
         ownerId:
           type: string
           description: オーナーのユーザーID
@@ -185,9 +222,11 @@ components:
         name:
           type: string
           minLength: 1
+          maxLength: 255
           description: プロジェクト名
         description:
           type: string
+          maxLength: 1000
           description: 説明
 
     UpdateProjectRequest:
@@ -196,9 +235,11 @@ components:
         name:
           type: string
           minLength: 1
+          maxLength: 255
           description: プロジェクト名
         description:
           type: string
+          maxLength: 1000
           description: 説明
 
     # ── ProjectMember ──
@@ -288,9 +329,12 @@ components:
           description: タスクID（cuid）
         taskNumber:
           type: integer
+          minimum: 1
           description: プロジェクト内連番
         title:
           type: string
+          minLength: 1
+          maxLength: 255
           description: タイトル
         description:
           type:
@@ -346,11 +390,13 @@ components:
           type:
             - number
             - "null"
+          minimum: 0
           description: 見積もり工数
         actualHours:
           type:
             - number
             - "null"
+          minimum: 0
           description: 実績工数
         sortOrder:
           type: integer
@@ -362,6 +408,31 @@ components:
           type: string
           format: date-time
 
+    TaskWithRelations:
+      description: リレーション情報を含むタスク（一覧・詳細取得時のレスポンス）
+      allOf:
+        - $ref: "#/components/schemas/Task"
+        - type: object
+          properties:
+            assignee:
+              oneOf:
+                - $ref: "#/components/schemas/UserSummary"
+                - type: "null"
+              description: 担当者情報
+            reporter:
+              $ref: "#/components/schemas/UserSummary"
+              description: 起票者情報
+            taskCategories:
+              type: array
+              items:
+                type: object
+                required:
+                  - category
+                properties:
+                  category:
+                    $ref: "#/components/schemas/Category"
+              description: 紐づくカテゴリ一覧
+
     CreateTaskRequest:
       type: object
       required:
@@ -370,6 +441,7 @@ components:
         title:
           type: string
           minLength: 1
+          maxLength: 255
           description: タイトル（必須）
         description:
           type: string
@@ -418,6 +490,7 @@ components:
         title:
           type: string
           minLength: 1
+          maxLength: 255
         description:
           type:
             - string
@@ -510,6 +583,7 @@ components:
         title:
           type: string
           minLength: 1
+          maxLength: 255
           description: サブタスクのタイトル
         description:
           type: string
@@ -556,7 +630,7 @@ components:
           type: string
           format: date-time
         author:
-          $ref: "#/components/schemas/User"
+          $ref: "#/components/schemas/UserSummary"
 
     CreateCommentRequest:
       type: object
@@ -566,6 +640,7 @@ components:
         content:
           type: string
           minLength: 1
+          maxLength: 10000
           description: コメント本文（Markdown）
 
     UpdateCommentRequest:
@@ -576,6 +651,7 @@ components:
         content:
           type: string
           minLength: 1
+          maxLength: 10000
           description: 編集後のコメント本文
 
     # ── Category ──
@@ -616,10 +692,13 @@ components:
         name:
           type: string
           minLength: 1
+          maxLength: 100
           description: カテゴリ名
         color:
           type: string
           description: OKLCH カラー値
+          examples:
+            - "oklch(0.55 0.22 27)"
 
     UpdateCategoryRequest:
       type: object
@@ -627,6 +706,7 @@ components:
         name:
           type: string
           minLength: 1
+          maxLength: 100
         color:
           type: string
 
@@ -655,7 +735,8 @@ components:
           description: ストレージURL
         fileSize:
           type: integer
-          description: ファイルサイズ（バイト）
+          maximum: 10485760
+          description: ファイルサイズ（バイト、上限 10MB）
         mimeType:
           type: string
           description: MIMEタイプ
@@ -718,7 +799,7 @@ components:
           type: string
           format: date-time
         user:
-          $ref: "#/components/schemas/User"
+          $ref: "#/components/schemas/UserSummary"
 
     # ── Notification ──
     Notification:
@@ -809,7 +890,7 @@ components:
           type: string
           format: date-time
         user:
-          $ref: "#/components/schemas/User"
+          $ref: "#/components/schemas/UserSummary"
 
     # ── Dashboard ──
     DashboardData:
@@ -938,11 +1019,38 @@ components:
         name:
           type: string
           minLength: 1
+          maxLength: 255
           description: 表示名
         password:
           type: string
           minLength: 8
           description: パスワード（8文字以上）
+
+    SignupResponse:
+      type: object
+      description: サインアップ成功時のレスポンス（パスワードを含まない部分的なUser情報）
+      required:
+        - id
+        - email
+        - name
+        - role
+      properties:
+        id:
+          type: string
+          description: ユーザーID（cuid）
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+        name:
+          type: string
+          description: 表示名
+        role:
+          type: string
+          enum:
+            - ADMIN
+            - MEMBER
+          description: システム権限
 
     ResetPasswordRequest:
       type: object
@@ -960,6 +1068,7 @@ components:
         name:
           type: string
           minLength: 1
+          maxLength: 255
         avatarUrl:
           type:
             - string
@@ -1031,6 +1140,7 @@ components:
       in: query
       schema:
         type: integer
+        minimum: 1
         default: 1
       description: ページ番号
     PerPageParam:
@@ -1038,8 +1148,10 @@ components:
       in: query
       schema:
         type: integer
+        minimum: 1
+        maximum: 100
         default: 20
-      description: 1ページあたりの件数
+      description: 1ページあたりの件数（1〜100）
 
   responses:
     BadRequest:
@@ -1122,7 +1234,7 @@ paths:
                   - data
                 properties:
                   data:
-                    $ref: "#/components/schemas/User"
+                    $ref: "#/components/schemas/SignupResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -1529,7 +1641,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Task"
+                      $ref: "#/components/schemas/TaskWithRelations"
                   pagination:
                     $ref: "#/components/schemas/Pagination"
         "401":
@@ -1566,7 +1678,7 @@ paths:
                   - data
                 properties:
                   data:
-                    $ref: "#/components/schemas/Task"
+                    $ref: "#/components/schemas/TaskWithRelations"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -1598,7 +1710,7 @@ paths:
                   - data
                 properties:
                   data:
-                    $ref: "#/components/schemas/Task"
+                    $ref: "#/components/schemas/TaskWithRelations"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1633,7 +1745,7 @@ paths:
                   - data
                 properties:
                   data:
-                    $ref: "#/components/schemas/Task"
+                    $ref: "#/components/schemas/TaskWithRelations"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -2081,7 +2193,10 @@ paths:
       tags:
         - Attachments
       summary: ファイルアップロード
-      description: タスクにファイルを添付する。対応形式: 画像（jpg/png/gif/webp）、PDF、テキスト、Office。上限 10MB
+      description: |
+        タスクにファイルを添付する。
+        - 対応形式: image/jpeg, image/png, image/gif, image/webp, application/pdf, text/plain, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        - ファイルサイズ上限: 10MB (10,485,760 バイト)
       operationId: uploadAttachment
       parameters:
         - $ref: "#/components/parameters/TaskId"
@@ -2097,7 +2212,7 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: アップロードするファイル
+                  description: アップロードするファイル（上限 10MB）
       responses:
         "201":
           description: ファイルアップロード成功
@@ -2302,6 +2417,11 @@ paths:
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/PerPageParam"
+        - name: isRead
+          in: query
+          schema:
+            type: boolean
+          description: 既読/未読でフィルター（true=既読のみ、false=未読のみ）
       responses:
         "200":
           description: 通知一覧取得成功
@@ -2444,6 +2564,11 @@ paths:
             type: string
             format: date
           description: 日付範囲（終了）
+        - name: resource
+          in: query
+          schema:
+            type: string
+          description: 対象リソースでフィルター
       responses:
         "200":
           description: 監査ログ一覧取得成功
