@@ -448,6 +448,7 @@ components:
           description: タイトル（必須）
         description:
           type: string
+          maxLength: 1000
           description: 説明（Markdown）
         status:
           type: string
