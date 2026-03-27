@@ -113,6 +113,7 @@ export const POST = async (
       include: {
         assignee: { select: { id: true, name: true, avatarUrl: true } },
         reporter: { select: { id: true, name: true, avatarUrl: true } },
+        taskCategories: { include: { category: true } },
       },
     })
 

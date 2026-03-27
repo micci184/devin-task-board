@@ -413,6 +413,9 @@ components:
       allOf:
         - $ref: "#/components/schemas/Task"
         - type: object
+          required:
+            - reporter
+            - taskCategories
           properties:
             assignee:
               oneOf:
@@ -1197,6 +1200,16 @@ components:
             error:
               code: NOT_FOUND
               message: リソースが見つかりません
+    Conflict:
+      description: リソース競合
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: CONFLICT
+              message: リソースが既に存在します
     InternalServerError:
       description: サーバーエラー
       content:
