@@ -6,9 +6,7 @@ export const signupSchema = z.object({
     .min(1, "メールアドレスは必須です")
     .email("メールアドレスの形式が正しくありません"),
   name: z.string().min(1, "名前は必須です"),
-  password: z
-    .string()
-    .min(8, "パスワードは8文字以上で入力してください"),
+  password: z.string().min(8, "パスワードは8文字以上で入力してください"),
 });
 
 export const loginSchema = z.object({

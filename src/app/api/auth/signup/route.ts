@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+
 import { prisma } from "@/lib/prisma";
 import { signupSchema } from "@/lib/validations/auth";
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   try {
     const body = await request.json();
     const parsed = signupSchema.safeParse(body);
@@ -70,4 +71,4 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
+};

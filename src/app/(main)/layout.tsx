@@ -1,7 +1,8 @@
-export default function MainLayout({
+const MainLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return <>{children}</>;
-}
+};
+export default MainLayout;

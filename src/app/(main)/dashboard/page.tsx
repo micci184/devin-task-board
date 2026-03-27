@@ -1,7 +1,8 @@
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-export default async function DashboardPage() {
+import { auth } from "@/lib/auth";
+
+const DashboardPage = async () => {
   const session = await auth();
 
   if (!session) {
@@ -18,4 +19,5 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
-}
+};
+export default DashboardPage;

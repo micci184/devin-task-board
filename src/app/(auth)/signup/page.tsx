@@ -4,16 +4,20 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
 import { signupSchema } from "@/lib/validations/auth";
+
 import type { SignupInput } from "@/lib/validations/auth";
 
-export default function SignupPage() {
+const SignupPage = () => {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof SignupInput, string>>>({});
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof SignupInput, string>>
+  >({});
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setFieldErrors({});
@@ -67,7 +71,7 @@ export default function SignupPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -84,7 +88,10 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="mb-1 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="name"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
               名前
             </label>
             <input
@@ -101,7 +108,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
               メールアドレス
             </label>
             <input
@@ -118,7 +128,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
               パスワード
             </label>
             <input
@@ -152,4 +165,5 @@ export default function SignupPage() {
       </div>
     </div>
   );
-}
+};
+export default SignupPage;

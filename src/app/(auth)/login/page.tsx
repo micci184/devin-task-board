@@ -4,16 +4,20 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
 import { loginSchema } from "@/lib/validations/auth";
+
 import type { LoginInput } from "@/lib/validations/auth";
 
-export default function LoginPage() {
+const LoginPage = () => {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof LoginInput, string>>>({});
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof LoginInput, string>>
+  >({});
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setFieldErrors({});
@@ -53,7 +57,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -70,7 +74,10 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
               メールアドレス
             </label>
             <input
@@ -87,7 +94,10 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
               パスワード
             </label>
             <input
@@ -121,4 +131,5 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
+};
+export default LoginPage;
