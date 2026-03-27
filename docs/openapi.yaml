@@ -979,11 +979,13 @@ components:
         myTasks:
           type: array
           items:
+            # ダッシュボード用の軽量レスポンス。リレーション展開が必要な場合は TaskWithRelations に変更する
             $ref: "#/components/schemas/Task"
           description: 自分にアサインされたタスク（上位5件）
         upcomingTasks:
           type: array
           items:
+            # ダッシュボード用の軽量レスポンス。リレーション展開が必要な場合は TaskWithRelations に変更する
             $ref: "#/components/schemas/Task"
           description: 期限が近いタスク（上位5件）
         recentActivities:
@@ -1001,6 +1003,7 @@ components:
         tasks:
           type: array
           items:
+            # 検索結果は軽量レスポンス。リレーション展開が必要な場合は TaskWithRelations に変更する
             $ref: "#/components/schemas/Task"
           description: 検索結果のタスク一覧
 
@@ -1636,7 +1639,6 @@ paths:
                 type: object
                 required:
                   - data
-                  - pagination
                 properties:
                   data:
                     type: array
@@ -1644,6 +1646,7 @@ paths:
                       $ref: "#/components/schemas/TaskWithRelations"
                   pagination:
                     $ref: "#/components/schemas/Pagination"
+                    description: "※ 現在の実装では未返却。ページネーション実装後に required へ昇格予定"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
