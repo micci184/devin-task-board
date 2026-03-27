@@ -91,30 +91,43 @@ export const POST = async (
       )
     }
 
-    const lastTask = await prisma.task.findFirst({
-      where: { projectId },
-      orderBy: { taskNumber: 'desc' },
-      select: { taskNumber: true },
-    })
-    const taskNumber = (lastTask?.taskNumber ?? 0) + 1
+    const task = await prisma.$transaction(async (tx) => {
+      const lastTask = await tx.task.findFirst({
+        where: { projectId },
+        orderBy: { taskNumber: 'desc' },
+        select: { taskNumber: true },
+      })
+      const taskNumber = (lastTask?.taskNumber ?? 0) + 1
 
-    const task = await prisma.task.create({
-      data: {
-        title: parsed.data.title,
-        description: parsed.data.description,
-        priority: parsed.data.priority,
-        status: parsed.data.status,
-        assigneeId: parsed.data.assigneeId || null,
-        dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
-        projectId,
-        reporterId: session.user.id,
-        taskNumber,
-      },
-      include: {
-        assignee: { select: { id: true, name: true, avatarUrl: true } },
-        reporter: { select: { id: true, name: true, avatarUrl: true } },
-        taskCategories: { include: { category: true } },
-      },
+      const { categoryIds, ...rest } = parsed.data
+
+      const created = await tx.task.create({
+        data: {
+          title: rest.title,
+          description: rest.description,
+          priority: rest.priority,
+          status: rest.status,
+          assigneeId: rest.assigneeId || null,
+          dueDate: rest.dueDate ? new Date(rest.dueDate) : null,
+          projectId,
+          reporterId: session.user.id,
+          taskNumber,
+          ...(categoryIds && categoryIds.length > 0
+            ? {
+                taskCategories: {
+                  create: categoryIds.map((categoryId) => ({ categoryId })),
+                },
+              }
+            : {}),
+        },
+        include: {
+          assignee: { select: { id: true, name: true, avatarUrl: true } },
+          reporter: { select: { id: true, name: true, avatarUrl: true } },
+          taskCategories: { include: { category: true } },
+        },
+      })
+
+      return created
     })
 
     return NextResponse.json({ data: task }, { status: 201 })

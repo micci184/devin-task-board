@@ -7,6 +7,7 @@ export const createTaskSchema = z.object({
   assigneeId: z.string().optional(),
   dueDate: z.string().optional(),
   status: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']).default('BACKLOG'),
+  categoryIds: z.array(z.string()).optional(),
 })
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>
