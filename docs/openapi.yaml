@@ -642,6 +642,7 @@ components:
         - taskId
         - uploaderId
         - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -665,6 +666,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     # ── ActivityLog ──
     ActivityLog:
@@ -677,6 +681,7 @@ components:
         - userId
         - projectId
         - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -709,6 +714,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        updatedAt:
+          type: string
+          format: date-time
         user:
           $ref: "#/components/schemas/User"
 
@@ -723,6 +731,7 @@ components:
         - isRead
         - userId
         - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -753,6 +762,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     # ── AuditLog ──
     AuditLog:
@@ -764,6 +776,7 @@ components:
         - resource
         - resourceId
         - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -790,6 +803,9 @@ components:
         details:
           description: 詳細情報（JSON）
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
         user:
