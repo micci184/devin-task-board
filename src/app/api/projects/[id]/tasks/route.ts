@@ -101,6 +101,16 @@ export const POST = async (
 
       const { categoryIds, ...rest } = parsed.data
 
+      if (categoryIds && categoryIds.length > 0) {
+        const validCategories = await tx.category.findMany({
+          where: { id: { in: categoryIds }, projectId },
+          select: { id: true },
+        })
+        if (validCategories.length !== categoryIds.length) {
+          throw new Error('INVALID_CATEGORY')
+        }
+      }
+
       const created = await tx.task.create({
         data: {
           title: rest.title,
@@ -132,6 +142,17 @@ export const POST = async (
 
     return NextResponse.json({ data: task }, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'INVALID_CATEGORY') {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: '指定されたカテゴリが見つからないか、このプロジェクトに属していません',
+          },
+        },
+        { status: 400 },
+      )
+    }
     console.error('[POST /api/projects/[id]/tasks]', error)
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'サーバーエラーが発生しました' } },
