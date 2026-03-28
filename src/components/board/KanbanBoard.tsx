@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import {
@@ -53,6 +53,10 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('BACKLOG')
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLocalTasks(tasks)
+  }, [tasks])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
