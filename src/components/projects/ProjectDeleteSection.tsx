@@ -18,11 +18,16 @@ export const ProjectDeleteSection = ({
   const [showDialog, setShowDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [confirmText, setConfirmText] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const handleDelete = async () => {
     setIsDeleting(true)
-    await deleteProject(projectId)
-    setIsDeleting(false)
+    setError(null)
+    const result = await deleteProject(projectId)
+    if (result?.error) {
+      setError(result.error)
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -54,6 +59,11 @@ export const ProjectDeleteSection = ({
             <p className="mt-3 text-sm text-foreground/60">
               確認のため、プロジェクト名を入力してください：
             </p>
+            {error && (
+              <div className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+                {error}
+              </div>
+            )}
             <input
               type="text"
               value={confirmText}

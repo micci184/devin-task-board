@@ -91,7 +91,7 @@ export const updateProject = async (
 
   const raw = {
     name: formData.get('name') || undefined,
-    description: formData.get('description') || undefined,
+    description: formData.get('description') ?? undefined,
   }
 
   const parsed = updateProjectSchema.safeParse(raw)

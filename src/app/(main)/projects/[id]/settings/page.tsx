@@ -25,6 +25,16 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
     redirect('/projects')
   }
 
+  const member = await prisma.projectMember.findUnique({
+    where: {
+      projectId_userId: { projectId, userId: session.user.id },
+    },
+  })
+
+  if (!member) {
+    redirect('/projects')
+  }
+
   const isOwner = project.ownerId === session.user.id
 
   return (
