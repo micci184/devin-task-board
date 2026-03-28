@@ -1,6 +1,7 @@
+import { useDroppable } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
 
-import { TaskCard } from "@/components/tasks/TaskCard";
+import { DraggableTaskCard } from "@/components/tasks/TaskCard";
 
 import type { Priority, TaskStatus } from "@prisma/client";
 
@@ -24,6 +25,7 @@ interface KanbanColumnProps {
   tasks: Task[];
   projectKey: string;
   onQuickCreate: (status: TaskStatus) => void;
+  activeTaskId: string | null;
 }
 
 export const KanbanColumn = ({
@@ -32,9 +34,19 @@ export const KanbanColumn = ({
   tasks,
   projectKey,
   onQuickCreate,
+  activeTaskId,
 }: KanbanColumnProps) => {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+
   return (
-    <div className="flex w-72 shrink-0 flex-col rounded-lg bg-foreground/3">
+    <div
+      ref={setNodeRef}
+      className={`flex w-72 shrink-0 flex-col rounded-lg transition-colors ${
+        isOver
+          ? "bg-primary/10 ring-2 ring-primary/40"
+          : "bg-foreground/3"
+      }`}
+    >
       <div className="flex items-center justify-between px-3 py-2">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-foreground/70">{label}</h3>
@@ -53,7 +65,12 @@ export const KanbanColumn = ({
 
       <div className="flex-1 space-y-2 overflow-y-auto px-2 pb-2">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} projectKey={projectKey} />
+          <DraggableTaskCard
+            key={task.id}
+            task={task}
+            projectKey={projectKey}
+            isDragOverlay={activeTaskId === task.id}
+          />
         ))}
       </div>
     </div>
