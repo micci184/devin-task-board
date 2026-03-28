@@ -18,15 +18,6 @@ const generateProjectKey = (name: string): string => {
     .slice(0, 5)
 }
 
-const ensureUniqueKey = async (baseKey: string): Promise<string> => {
-  let key = baseKey
-  let suffix = 1
-  while (await prisma.project.findUnique({ where: { key } })) {
-    key = `${baseKey}${suffix}`
-    suffix++
-  }
-  return key
-}
 
 export const GET = async (_request: NextRequest) => {
   try {
@@ -99,9 +90,15 @@ export const POST = async (request: NextRequest) => {
     }
 
     const baseKey = generateProjectKey(parsed.data.name)
-    const key = await ensureUniqueKey(baseKey)
 
     const project = await prisma.$transaction(async (tx) => {
+      let key = baseKey
+      let suffix = 1
+      while (await tx.project.findUnique({ where: { key } })) {
+        key = `${baseKey}${suffix}`
+        suffix++
+      }
+
       const created = await tx.project.create({
         data: {
           name: parsed.data.name,
