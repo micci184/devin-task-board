@@ -121,7 +121,7 @@ export const updateProject = async (
     data: {
       ...(parsed.data.name && { name: parsed.data.name }),
       ...(parsed.data.description !== undefined && {
-        description: parsed.data.description ?? null,
+        description: parsed.data.description || null,
       }),
     },
   })
