@@ -23,9 +23,14 @@ export const ProjectDeleteSection = ({
   const handleDelete = async () => {
     setIsDeleting(true)
     setError(null)
-    const result = await deleteProject(projectId)
-    if (result?.error) {
-      setError(result.error)
+    try {
+      const result = await deleteProject(projectId)
+      if (result?.error) {
+        setError(result.error)
+        setIsDeleting(false)
+      }
+    } catch {
+      setError('予期しないエラーが発生しました')
       setIsDeleting(false)
     }
   }
@@ -76,6 +81,7 @@ export const ProjectDeleteSection = ({
                 onClick={() => {
                   setShowDialog(false)
                   setConfirmText('')
+                  setError(null)
                 }}
                 className="rounded-md border border-foreground/10 px-4 py-2 text-sm font-medium text-foreground/60 transition-colors hover:bg-foreground/5"
               >

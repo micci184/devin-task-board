@@ -17,19 +17,20 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
 
   const { id: projectId } = await params
 
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-  })
+  const [project, member] = await Promise.all([
+    prisma.project.findUnique({
+      where: { id: projectId },
+    }),
+    prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: { projectId, userId: session.user.id },
+      },
+    }),
+  ])
 
   if (!project) {
     redirect('/projects')
   }
-
-  const member = await prisma.projectMember.findUnique({
-    where: {
-      projectId_userId: { projectId, userId: session.user.id },
-    },
-  })
 
   if (!member || (member.role !== 'OWNER' && member.role !== 'ADMIN')) {
     redirect('/projects')
