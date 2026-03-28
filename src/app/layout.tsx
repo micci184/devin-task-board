@@ -1,5 +1,7 @@
 import "./globals.css";
 
+import { Toaster } from "sonner";
+
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { SessionProvider } from "@/components/layout/SessionProvider";
 
@@ -26,6 +28,7 @@ const RootLayout = ({
             disableTransitionOnChange
           >
             {children}
+            <Toaster richColors position="bottom-right" />
           </ThemeProvider>
         </SessionProvider>
       </body>

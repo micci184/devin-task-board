@@ -1,4 +1,7 @@
-import { Calendar, User } from 'lucide-react'
+'use client'
+
+import { useDraggable } from '@dnd-kit/core'
+import { Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 
 import type { Priority } from '@prisma/client'
@@ -17,6 +20,10 @@ interface TaskCardProps {
     } | null
   }
   projectKey: string
+}
+
+interface DraggableTaskCardProps extends TaskCardProps {
+  isDragOverlay: boolean
 }
 
 const priorityConfig: Record<Priority, { label: string; className: string }> = {
@@ -62,6 +69,23 @@ export const TaskCard = ({ task, projectKey }: TaskCardProps) => {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+export const DraggableTaskCard = ({ task, projectKey, isDragOverlay }: DraggableTaskCardProps) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: task.id,
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={isDragging || isDragOverlay ? 'opacity-30' : ''}
+    >
+      <TaskCard task={task} projectKey={projectKey} />
     </div>
   )
 }

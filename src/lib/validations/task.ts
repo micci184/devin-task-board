@@ -11,3 +11,10 @@ export const createTaskSchema = z.object({
 })
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>
+
+export const updateTaskStatusSchema = z.object({
+  status: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']),
+  sortOrder: z.number().int().optional(),
+})
+
+export type UpdateTaskStatusInput = z.infer<typeof updateTaskStatusSchema>
