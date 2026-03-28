@@ -21,6 +21,25 @@ docker compose up --build
 
 初回起動時に Prisma migration が自動適用されます。
 
+## Setup (AI Agent / Devin)
+
+AI Agent で作業する場合は、以下の順で環境を立ち上げる。
+
+```bash
+cp .env.example .env
+docker compose up -d db
+npx prisma generate
+npx prisma migrate deploy
+npm install
+npm run dev
+```
+
+PR 作成前に最低限以下を実行すること。
+
+```bash
+npx next build
+```
+
 ## Setup (Local)
 
 ```bash
