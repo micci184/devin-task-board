@@ -23,7 +23,8 @@ export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
     e.preventDefault()
     setFieldErrors({})
 
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
     const data = {
       email: formData.get('email') as string,
       role: formData.get('role') as string,
@@ -56,7 +57,7 @@ export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
       }
 
       toast.success('メンバーを招待しました')
-      e.currentTarget.reset()
+      form.reset()
       router.refresh()
     } catch {
       toast.error('ネットワークエラーが発生しました')
