@@ -31,7 +31,7 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
     },
   })
 
-  if (!member) {
+  if (!member || (member.role !== 'OWNER' && member.role !== 'ADMIN')) {
     redirect('/projects')
   }
 
