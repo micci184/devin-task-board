@@ -99,14 +99,15 @@ export const POST = async (
       })
       const taskNumber = (lastTask?.taskNumber ?? 0) + 1
 
-      const { categoryIds, ...rest } = parsed.data
+      const { categoryIds: rawCategoryIds, ...rest } = parsed.data
+      const uniqueCategoryIds = rawCategoryIds ? [...new Set(rawCategoryIds)] : undefined
 
-      if (categoryIds && categoryIds.length > 0) {
+      if (uniqueCategoryIds && uniqueCategoryIds.length > 0) {
         const validCategories = await tx.category.findMany({
-          where: { id: { in: categoryIds }, projectId },
+          where: { id: { in: uniqueCategoryIds }, projectId },
           select: { id: true },
         })
-        if (validCategories.length !== categoryIds.length) {
+        if (validCategories.length !== uniqueCategoryIds.length) {
           throw new Error('INVALID_CATEGORY')
         }
       }
@@ -122,10 +123,10 @@ export const POST = async (
           projectId,
           reporterId: session.user.id,
           taskNumber,
-          ...(categoryIds && categoryIds.length > 0
+          ...(uniqueCategoryIds && uniqueCategoryIds.length > 0
             ? {
                 taskCategories: {
-                  create: categoryIds.map((categoryId) => ({ categoryId })),
+                  create: uniqueCategoryIds.map((categoryId) => ({ categoryId })),
                 },
               }
             : {}),
