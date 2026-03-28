@@ -19,16 +19,6 @@ const generateProjectKey = (name: string): string => {
     .substring(0, 5)
 }
 
-const ensureUniqueKey = async (baseKey: string): Promise<string> => {
-  let key = baseKey
-  let suffix = 1
-  while (await prisma.project.findUnique({ where: { key } })) {
-    key = `${baseKey}${suffix}`
-    suffix++
-  }
-  return key
-}
-
 export interface ProjectActionState {
   error?: string
   success?: boolean
@@ -54,21 +44,29 @@ export const createProject = async (
   }
 
   const baseKey = generateProjectKey(parsed.data.name)
-  const key = await ensureUniqueKey(baseKey)
 
-  const project = await prisma.project.create({
-    data: {
-      name: parsed.data.name,
-      description: parsed.data.description ?? null,
-      key,
-      ownerId: session.user.id,
-      projectMembers: {
-        create: {
-          userId: session.user.id,
-          role: 'OWNER',
+  const project = await prisma.$transaction(async (tx) => {
+    let key = baseKey
+    let suffix = 1
+    while (await tx.project.findUnique({ where: { key } })) {
+      key = `${baseKey}${suffix}`
+      suffix++
+    }
+
+    return tx.project.create({
+      data: {
+        name: parsed.data.name,
+        description: parsed.data.description ?? null,
+        key,
+        ownerId: session.user.id,
+        projectMembers: {
+          create: {
+            userId: session.user.id,
+            role: 'OWNER',
+          },
         },
       },
-    },
+    })
   })
 
   revalidatePath('/projects')
