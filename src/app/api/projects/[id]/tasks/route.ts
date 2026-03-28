@@ -91,33 +91,69 @@ export const POST = async (
       )
     }
 
-    const lastTask = await prisma.task.findFirst({
-      where: { projectId },
-      orderBy: { taskNumber: 'desc' },
-      select: { taskNumber: true },
-    })
-    const taskNumber = (lastTask?.taskNumber ?? 0) + 1
+    const task = await prisma.$transaction(async (tx) => {
+      const lastTask = await tx.task.findFirst({
+        where: { projectId },
+        orderBy: { taskNumber: 'desc' },
+        select: { taskNumber: true },
+      })
+      const taskNumber = (lastTask?.taskNumber ?? 0) + 1
 
-    const task = await prisma.task.create({
-      data: {
-        title: parsed.data.title,
-        description: parsed.data.description,
-        priority: parsed.data.priority,
-        status: parsed.data.status,
-        assigneeId: parsed.data.assigneeId || null,
-        dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
-        projectId,
-        reporterId: session.user.id,
-        taskNumber,
-      },
-      include: {
-        assignee: { select: { id: true, name: true, avatarUrl: true } },
-        reporter: { select: { id: true, name: true, avatarUrl: true } },
-      },
+      const { categoryIds: rawCategoryIds, ...rest } = parsed.data
+      const uniqueCategoryIds = rawCategoryIds ? [...new Set(rawCategoryIds)] : undefined
+
+      if (uniqueCategoryIds && uniqueCategoryIds.length > 0) {
+        const validCategories = await tx.category.findMany({
+          where: { id: { in: uniqueCategoryIds }, projectId },
+          select: { id: true },
+        })
+        if (validCategories.length !== uniqueCategoryIds.length) {
+          throw new Error('INVALID_CATEGORY')
+        }
+      }
+
+      const created = await tx.task.create({
+        data: {
+          title: rest.title,
+          description: rest.description,
+          priority: rest.priority,
+          status: rest.status,
+          assigneeId: rest.assigneeId || null,
+          dueDate: rest.dueDate ? new Date(rest.dueDate) : null,
+          projectId,
+          reporterId: session.user.id,
+          taskNumber,
+          ...(uniqueCategoryIds && uniqueCategoryIds.length > 0
+            ? {
+                taskCategories: {
+                  create: uniqueCategoryIds.map((categoryId) => ({ categoryId })),
+                },
+              }
+            : {}),
+        },
+        include: {
+          assignee: { select: { id: true, name: true, avatarUrl: true } },
+          reporter: { select: { id: true, name: true, avatarUrl: true } },
+          taskCategories: { include: { category: true } },
+        },
+      })
+
+      return created
     })
 
     return NextResponse.json({ data: task }, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'INVALID_CATEGORY') {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: '指定されたカテゴリが見つからないか、このプロジェクトに属していません',
+          },
+        },
+        { status: 400 },
+      )
+    }
     console.error('[POST /api/projects/[id]/tasks]', error)
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'サーバーエラーが発生しました' } },

@@ -123,6 +123,9 @@ export const TaskCreateModal = ({
               className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="タスクの説明（Markdown対応）"
             />
+            {fieldErrors.description && (
+              <p className="mt-1 text-sm text-danger">{fieldErrors.description}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
