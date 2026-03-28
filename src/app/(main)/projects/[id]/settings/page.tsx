@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { ProjectSettingsForm } from '@/components/projects/ProjectSettingsForm'
 import { ProjectDeleteSection } from '@/components/projects/ProjectDeleteSection'
+import { InviteMemberForm } from '@/components/members/InviteMemberForm'
+import { MemberList } from '@/components/members/MemberList'
+
+import type { ProjectRole } from '@prisma/client'
 
 interface SettingsPageProps {
   params: Promise<{ id: string }>
@@ -17,26 +21,54 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
 
   const { id: projectId } = await params
 
-  const [project, member] = await Promise.all([
+  const [project, membership, members] = await Promise.all([
     prisma.project.findUnique({
       where: { id: projectId },
     }),
     prisma.projectMember.findUnique({
-      where: {
-        projectId_userId: { projectId, userId: session.user.id },
+      where: { projectId_userId: { projectId, userId: session.user.id } },
+    }),
+    prisma.projectMember.findMany({
+      where: { projectId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
       },
+      orderBy: { createdAt: 'asc' },
     }),
   ])
 
-  if (!project) {
+  if (!project || !membership) {
     redirect('/projects')
   }
 
-  if (!member || (member.role !== 'OWNER' && member.role !== 'ADMIN')) {
+  if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
     redirect('/projects')
   }
 
   const isOwner = project.ownerId === session.user.id
+  const canInvite = membership.role === 'OWNER' || membership.role === 'ADMIN'
+
+  const serializedMembers = members.map((m) => ({
+    id: m.id,
+    projectId: m.projectId,
+    userId: m.userId,
+    role: m.role as ProjectRole,
+    createdAt: m.createdAt.toISOString(),
+    updatedAt: m.updatedAt.toISOString(),
+    user: {
+      id: m.user.id,
+      email: m.user.email,
+      name: m.user.name,
+      avatarUrl: m.user.avatarUrl,
+    },
+  }))
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -51,6 +83,21 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
           defaultName={project.name}
           defaultDescription={project.description ?? ''}
         />
+
+        <section>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">
+            メンバー（{members.length}人）
+          </h2>
+
+          {canInvite && (
+            <div className="mb-6 rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
+              <h3 className="mb-3 text-sm font-medium text-foreground">メンバーを招待</h3>
+              <InviteMemberForm projectId={projectId} />
+            </div>
+          )}
+
+          <MemberList members={serializedMembers} />
+        </section>
 
         {isOwner && <ProjectDeleteSection projectId={project.id} projectName={project.name} />}
       </div>
