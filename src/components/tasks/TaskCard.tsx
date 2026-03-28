@@ -1,3 +1,5 @@
+'use client'
+
 import { useDraggable } from '@dnd-kit/core'
 import { Calendar } from 'lucide-react'
 import { format } from 'date-fns'

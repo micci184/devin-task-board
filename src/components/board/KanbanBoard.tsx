@@ -86,6 +86,9 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
     const taskId = active.id as string
     const newStatus = over.id as TaskStatus
 
+    const validStatuses = columns.map((c) => c.status)
+    if (!validStatuses.includes(newStatus)) return
+
     const task = localTasks.find((t) => t.id === taskId)
     if (!task || task.status === newStatus) return
 

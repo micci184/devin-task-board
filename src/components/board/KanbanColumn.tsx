@@ -1,31 +1,33 @@
-import { useDroppable } from "@dnd-kit/core";
-import { Plus } from "lucide-react";
+'use client'
 
-import { DraggableTaskCard } from "@/components/tasks/TaskCard";
+import { useDroppable } from '@dnd-kit/core'
+import { Plus } from 'lucide-react'
 
-import type { Priority, TaskStatus } from "@prisma/client";
+import { DraggableTaskCard } from '@/components/tasks/TaskCard'
+
+import type { Priority, TaskStatus } from '@prisma/client'
 
 interface Task {
-  id: string;
-  taskNumber: number;
-  title: string;
-  priority: Priority;
-  status: TaskStatus;
-  dueDate: string | Date | null;
+  id: string
+  taskNumber: number
+  title: string
+  priority: Priority
+  status: TaskStatus
+  dueDate: string | Date | null
   assignee: {
-    id: string;
-    name: string;
-    avatarUrl: string | null;
-  } | null;
+    id: string
+    name: string
+    avatarUrl: string | null
+  } | null
 }
 
 interface KanbanColumnProps {
-  status: TaskStatus;
-  label: string;
-  tasks: Task[];
-  projectKey: string;
-  onQuickCreate: (status: TaskStatus) => void;
-  activeTaskId: string | null;
+  status: TaskStatus
+  label: string
+  tasks: Task[]
+  projectKey: string
+  onQuickCreate: (status: TaskStatus) => void
+  activeTaskId: string | null
 }
 
 export const KanbanColumn = ({
@@ -36,7 +38,7 @@ export const KanbanColumn = ({
   onQuickCreate,
   activeTaskId,
 }: KanbanColumnProps) => {
-  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const { setNodeRef, isOver } = useDroppable({ id: status })
 
   return (
     <div
@@ -74,5 +76,5 @@ export const KanbanColumn = ({
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
