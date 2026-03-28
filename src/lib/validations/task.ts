@@ -18,3 +18,16 @@ export const updateTaskStatusSchema = z.object({
 })
 
 export type UpdateTaskStatusInput = z.infer<typeof updateTaskStatusSchema>
+
+export const updateTaskSchema = z.object({
+  title: z.string().min(1, 'タイトルは必須です').max(255, 'タイトルは255文字以内で入力してください').optional(),
+  description: z.string().max(1000, '説明は1000文字以内で入力してください').nullable().optional(),
+  status: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']).optional(),
+  priority: z.enum(['URGENT', 'HIGH', 'MEDIUM', 'LOW', 'NONE']).optional(),
+  assigneeId: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
+  estimatedHours: z.number().min(0, '見積もり工数は0以上で入力してください').nullable().optional(),
+  actualHours: z.number().min(0, '実績工数は0以上で入力してください').nullable().optional(),
+})
+
+export type UpdateTaskInput = z.infer<typeof updateTaskSchema>
