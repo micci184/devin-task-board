@@ -265,43 +265,53 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
         .filter((t) => t.status === targetStatus && t.id !== activeId)
         .sort((a, b) => a.sortOrder - b.sortOrder)
 
-      let newSortOrder: number
+      let allUpdates: { id: string; sortOrder: number }[]
       if (overTask) {
         const overIndex = targetTasks.findIndex((t) => t.id === overId)
         const tasksWithActive = [...targetTasks]
-        tasksWithActive.splice(overIndex + 1, 0, task)
-        const reordered = tasksWithActive.map((t, i) => ({
+        tasksWithActive.splice(overIndex + 1, 0, { ...task, status: targetStatus })
+        allUpdates = tasksWithActive.map((t, i) => ({
           id: t.id,
           sortOrder: (i + 1) * SORT_ORDER_GAP,
         }))
-        const activeUpdate = reordered.find((u) => u.id === activeId)
-        newSortOrder = activeUpdate ? activeUpdate.sortOrder : (targetTasks.length + 1) * SORT_ORDER_GAP
       } else {
-        newSortOrder = targetTasks.length > 0
+        const newSortOrder = targetTasks.length > 0
           ? targetTasks[targetTasks.length - 1].sortOrder + SORT_ORDER_GAP
           : SORT_ORDER_GAP
+        allUpdates = [{ id: activeId, sortOrder: newSortOrder }]
       }
 
+      const activeUpdate = allUpdates.find((u) => u.id === activeId)
+      const newSortOrder = activeUpdate?.sortOrder ?? SORT_ORDER_GAP
+
       setLocalTasks((prev) =>
-        prev.map((t) =>
-          t.id === activeId
-            ? { ...t, status: targetStatus, sortOrder: newSortOrder }
-            : t,
-        ),
+        prev.map((t) => {
+          if (t.id === activeId) {
+            return { ...t, status: targetStatus, sortOrder: newSortOrder }
+          }
+          const update = allUpdates.find((u) => u.id === t.id)
+          return update ? { ...t, sortOrder: update.sortOrder } : t
+        }),
       )
 
       try {
-        const res = await fetch(`/api/tasks/${activeId}/sort`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sortOrder: newSortOrder, status: targetStatus }),
-        })
-
-        if (!res.ok) {
-          const json = await res.json()
-          throw new Error(json.error?.message ?? 'ステータスの更新に失敗しました')
-        }
-
+        await Promise.all(
+          allUpdates.map((u) =>
+            fetch(`/api/tasks/${u.id}/sort`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sortOrder: u.sortOrder,
+                ...(u.id === activeId ? { status: targetStatus } : {}),
+              }),
+            }).then(async (res) => {
+              if (!res.ok) {
+                const json = await res.json()
+                throw new Error(json.error?.message ?? 'ステータスの更新に失敗しました')
+              }
+            }),
+          ),
+        )
         router.refresh()
       } catch (error) {
         setLocalTasks(tasks)
