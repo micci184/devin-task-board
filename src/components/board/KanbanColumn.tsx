@@ -1,5 +1,7 @@
 'use client'
 
+import { useRef, useState } from 'react'
+
 import { useDroppable } from '@dnd-kit/core'
 import { Plus } from 'lucide-react'
 
@@ -26,7 +28,7 @@ interface KanbanColumnProps {
   label: string
   tasks: Task[]
   projectKey: string
-  onQuickCreate: (status: TaskStatus) => void
+  onQuickCreate: (status: TaskStatus, title: string) => Promise<void>
   activeTaskId: string | null
 }
 
@@ -39,6 +41,43 @@ export const KanbanColumn = ({
   activeTaskId,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: status })
+  const [isCreating, setIsCreating] = useState(false)
+  const [title, setTitle] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleOpenForm = () => {
+    setIsCreating(true)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+
+  const handleCancel = () => {
+    setIsCreating(false)
+    setTitle('')
+  }
+
+  const handleSubmit = async () => {
+    const trimmed = title.trim()
+    if (!trimmed || submitting) return
+
+    setSubmitting(true)
+    try {
+      await onQuickCreate(status, trimmed)
+      setTitle('')
+      setTimeout(() => inputRef.current?.focus(), 0)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleSubmit()
+    } else if (e.key === 'Escape') {
+      handleCancel()
+    }
+  }
 
   return (
     <div
@@ -57,7 +96,7 @@ export const KanbanColumn = ({
           </span>
         </div>
         <button
-          onClick={() => onQuickCreate(status)}
+          onClick={handleOpenForm}
           className="flex h-6 w-6 items-center justify-center rounded text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
           aria-label={`${label}にタスクを追加`}
         >
@@ -66,6 +105,26 @@ export const KanbanColumn = ({
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto px-2 pb-2">
+        {isCreating && (
+          <div className="rounded-lg border border-primary/40 bg-background p-2 shadow-sm">
+            <input
+              ref={inputRef}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+                if (!title.trim()) handleCancel()
+              }}
+              placeholder="タイトルを入力..."
+              disabled={submitting}
+              className="w-full rounded border border-foreground/20 bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+            />
+            <p className="mt-1 text-xs text-foreground/40">
+              Enter で作成 / Esc でキャンセル
+            </p>
+          </div>
+        )}
         {tasks.map((task) => (
           <DraggableTaskCard
             key={task.id}

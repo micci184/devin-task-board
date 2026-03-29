@@ -14,7 +14,6 @@ import { toast } from 'sonner'
 
 import { KanbanColumn } from '@/components/board/KanbanColumn'
 import { TaskCard } from '@/components/tasks/TaskCard'
-import { TaskCreateModal } from '@/components/tasks/TaskCreateModal'
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import type { Priority, TaskStatus } from '@prisma/client'
@@ -49,8 +48,6 @@ const columns: { status: TaskStatus; label: string }[] = [
 
 export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) => {
   const router = useRouter()
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('BACKLOG')
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
 
@@ -68,9 +65,47 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
     ? localTasks.find((t) => t.id === activeTaskId) ?? null
     : null
 
-  const handleQuickCreate = (status: TaskStatus) => {
-    setDefaultStatus(status)
-    setShowCreateModal(true)
+  const handleQuickCreate = async (status: TaskStatus, title: string) => {
+    const tempId = `temp-${Date.now()}`
+    const optimisticTask: Task = {
+      id: tempId,
+      taskNumber: 0,
+      title,
+      priority: 'NONE',
+      status,
+      dueDate: null,
+      assignee: null,
+    }
+
+    setLocalTasks((prev) => [...prev, optimisticTask])
+
+    try {
+      const res = await fetch(`/api/projects/${projectId}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, status }),
+      })
+
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error?.message ?? 'タスクの作成に失敗しました')
+      }
+
+      const json = await res.json()
+      const created = json.data as Task
+
+      setLocalTasks((prev) =>
+        prev.map((t) => (t.id === tempId ? created : t)),
+      )
+
+      toast.success('タスクを作成しました')
+      router.refresh()
+    } catch (error) {
+      setLocalTasks((prev) => prev.filter((t) => t.id !== tempId))
+      toast.error(
+        error instanceof Error ? error.message : 'タスクの作成に失敗しました',
+      )
+    }
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -156,13 +191,6 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
         </DragOverlay>
       </DndContext>
 
-      {showCreateModal && (
-        <TaskCreateModal
-          projectId={projectId}
-          defaultStatus={defaultStatus}
-          onClose={() => setShowCreateModal(false)}
-        />
-      )}
     </>
   )
 }
