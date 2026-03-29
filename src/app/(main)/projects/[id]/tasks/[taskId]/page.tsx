@@ -30,6 +30,7 @@ const TaskDetailPage = async ({ params }: TaskDetailPageProps) => {
           title: true,
           status: true,
           priority: true,
+          dueDate: true,
           assignee: { select: { id: true, name: true, avatarUrl: true } },
         },
         orderBy: { createdAt: 'asc' },
@@ -66,6 +67,10 @@ const TaskDetailPage = async ({ params }: TaskDetailPageProps) => {
     dueDate: task.dueDate ? task.dueDate.toISOString() : null,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
+    subtasks: task.subtasks.map((s) => ({
+      ...s,
+      dueDate: s.dueDate ? s.dueDate.toISOString() : null,
+    })),
   }
 
   return (

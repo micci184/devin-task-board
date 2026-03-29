@@ -19,6 +19,7 @@ import {
   Pencil,
   ChevronDown,
   Trash2,
+  Plus,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -47,6 +48,7 @@ interface TaskSubtask {
   title: string
   status: TaskStatus
   priority: Priority
+  dueDate: string | Date | null
   assignee: TaskMember | null
 }
 
@@ -660,6 +662,244 @@ const InlineEditNumber = ({
   )
 }
 
+// --- Subtask Section ---
+
+const SubtaskSection = ({
+  task,
+  canEdit,
+  projectMembers,
+  onUpdated,
+}: {
+  task: TaskData
+  canEdit: boolean
+  projectMembers: ProjectMemberItem[]
+  onUpdated: (task: TaskData) => void
+}) => {
+  const [showForm, setShowForm] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [title, setTitle] = useState('')
+  const [assigneeId, setAssigneeId] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const titleInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (showForm && titleInputRef.current) {
+      titleInputRef.current.focus()
+    }
+  }, [showForm])
+
+  const doneCount = task.subtasks.filter((s) => s.status === 'DONE').length
+  const totalCount = task.subtasks.length
+  const progressPercent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+
+  const handleCreate = async () => {
+    const trimmed = title.trim()
+    if (!trimmed || creating) return
+
+    setCreating(true)
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/subtasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: trimmed,
+          assigneeId: assigneeId || undefined,
+          dueDate: dueDate || undefined,
+        }),
+      })
+
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error?.message ?? 'サブタスクの作成に失敗しました')
+      }
+
+      const json = await res.json()
+      const newSubtask = json.data as TaskSubtask
+
+      const refreshRes = await fetch(`/api/tasks/${task.id}`)
+      if (refreshRes.ok) {
+        const refreshJson = await refreshRes.json()
+        onUpdated(refreshJson.data as TaskData)
+      } else {
+        onUpdated({
+          ...task,
+          subtasks: [...task.subtasks, newSubtask],
+        })
+      }
+
+      toast.success('サブタスクを作成しました')
+      setTitle('')
+      setAssigneeId('')
+      setDueDate('')
+      setShowForm(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'サブタスクの作成に失敗しました')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleCreate()
+    }
+    if (e.key === 'Escape') {
+      setTitle('')
+      setAssigneeId('')
+      setDueDate('')
+      setShowForm(false)
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-foreground/10 bg-background p-4">
+      <div className="flex items-center gap-2">
+        <ListTodo size={16} className="text-foreground/60" />
+        <h2 className="text-sm font-semibold text-foreground">サブタスク</h2>
+        {totalCount > 0 && (
+          <span className="text-xs text-foreground/40">
+            ({doneCount}/{totalCount})
+          </span>
+        )}
+        {canEdit && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="ml-auto flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+          >
+            <Plus size={14} />
+            追加
+          </button>
+        )}
+      </div>
+
+      {/* Progress bar */}
+      {totalCount > 0 && (
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-xs text-foreground/60">
+            <span>進捗</span>
+            <span>{progressPercent}%</span>
+          </div>
+          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-foreground/10">
+            <div
+              className="h-full rounded-full bg-success transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Subtask list */}
+      {totalCount > 0 ? (
+        <ul className="mt-3 space-y-2">
+          {task.subtasks.map((subtask) => {
+            const subtaskStatus = statusConfig[subtask.status]
+            const subtaskDueDate = subtask.dueDate ? new Date(subtask.dueDate) : null
+            const isOverdue = subtaskDueDate && subtask.status !== 'DONE' ? subtaskDueDate < new Date() : false
+            return (
+              <li key={subtask.id}>
+                <Link
+                  href={`/projects/${task.projectId}/tasks/${subtask.id}`}
+                  className="flex items-center gap-2 rounded-md p-2 text-sm hover:bg-foreground/5"
+                >
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${subtask.status === 'DONE' ? 'bg-success' : 'bg-foreground/30'}`} />
+                  <span className="text-xs text-foreground/40">
+                    {task.project.key}-{subtask.taskNumber}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-foreground">{subtask.title}</span>
+                  {subtaskDueDate && (
+                    <span className={`flex shrink-0 items-center gap-1 text-xs ${isOverdue ? 'text-danger' : 'text-foreground/40'}`}>
+                      <Calendar size={10} />
+                      {format(subtaskDueDate, 'M/d')}
+                    </span>
+                  )}
+                  {subtask.assignee && (
+                    <div
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-medium text-primary"
+                      title={subtask.assignee.name}
+                    >
+                      {subtask.assignee.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${subtaskStatus.className}`}>
+                    {subtaskStatus.label}
+                  </span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        !showForm && <p className="mt-3 text-sm text-foreground/40">サブタスクはありません</p>
+      )}
+
+      {/* Create subtask form */}
+      {showForm && (
+        <div className="mt-3 space-y-3 rounded-md border border-foreground/10 bg-foreground/[0.02] p-3">
+          <div>
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="サブタスクのタイトル"
+              className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none"
+              maxLength={255}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground/60">担当者</label>
+              <select
+                value={assigneeId}
+                onChange={(e) => setAssigneeId(e.target.value)}
+                className="w-full rounded-md border border-foreground/20 bg-background px-2 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+              >
+                <option value="">未割り当て</option>
+                {projectMembers.map((m) => (
+                  <option key={m.userId} value={m.userId}>
+                    {m.user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground/60">期限</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full rounded-md border border-foreground/20 bg-background px-2 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => {
+                setTitle('')
+                setAssigneeId('')
+                setDueDate('')
+                setShowForm(false)
+              }}
+              className="rounded-md border border-foreground/20 px-3 py-1.5 text-xs font-medium text-foreground/60 hover:bg-foreground/5"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={handleCreate}
+              disabled={creating || !title.trim()}
+              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {creating ? '作成中...' : '作成'}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 // --- Delete Confirmation Dialog ---
 
 const DeleteConfirmDialog = ({
@@ -822,41 +1062,12 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit }:
           </section>
 
           {/* Subtasks */}
-          <section className="rounded-lg border border-foreground/10 bg-background p-4">
-            <div className="flex items-center gap-2">
-              <ListTodo size={16} className="text-foreground/60" />
-              <h2 className="text-sm font-semibold text-foreground">サブタスク</h2>
-              {task.subtasks.length > 0 && (
-                <span className="text-xs text-foreground/40">({task.subtasks.length})</span>
-              )}
-            </div>
-            {task.subtasks.length > 0 ? (
-              <ul className="mt-3 space-y-2">
-                {task.subtasks.map((subtask) => {
-                  const subtaskStatus = statusConfig[subtask.status]
-                  return (
-                    <li key={subtask.id}>
-                      <Link
-                        href={`/projects/${task.projectId}/tasks/${subtask.id}`}
-                        className="flex items-center gap-2 rounded-md p-2 text-sm hover:bg-foreground/5"
-                      >
-                        <span className={`h-2 w-2 shrink-0 rounded-full ${subtask.status === 'DONE' ? 'bg-success' : 'bg-foreground/30'}`} />
-                        <span className="text-xs text-foreground/40">
-                          {task.project.key}-{subtask.taskNumber}
-                        </span>
-                        <span className="text-foreground">{subtask.title}</span>
-                        <span className={`ml-auto rounded-full px-2 py-0.5 text-xs ${subtaskStatus.className}`}>
-                          {subtaskStatus.label}
-                        </span>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-foreground/40">サブタスクはありません</p>
-            )}
-          </section>
+          <SubtaskSection
+            task={task}
+            canEdit={canEdit}
+            projectMembers={projectMembers}
+            onUpdated={handleUpdated}
+          />
 
           {/* Comments placeholder */}
           <section className="rounded-lg border border-foreground/10 bg-background p-4">
