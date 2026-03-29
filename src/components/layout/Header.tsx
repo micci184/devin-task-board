@@ -11,13 +11,13 @@ import {
   Moon,
   Monitor,
   Bell,
-  Search,
   LogOut,
   Menu,
   LayoutDashboard,
   FolderKanban,
   Settings,
 } from "lucide-react";
+import { GlobalSearch } from "@/components/layout/GlobalSearch";
 
 const mobileNavItems = [
   { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
@@ -72,18 +72,7 @@ export const Header = () => {
           <Menu size={18} />
         </button>
 
-        <div className="relative hidden sm:block">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
-          />
-          <input
-            type="text"
-            placeholder="検索..."
-            disabled
-            className="h-8 w-64 rounded-md border border-foreground/10 bg-foreground/5 pl-9 pr-3 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
-          />
-        </div>
+        <GlobalSearch />
       </div>
 
       <div className="flex items-center gap-2">
