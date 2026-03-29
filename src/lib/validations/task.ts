@@ -28,6 +28,7 @@ export const updateTaskSchema = z.object({
   dueDate: z.string().nullable().optional(),
   estimatedHours: z.number().min(0, '見積もり工数は0以上で入力してください').nullable().optional(),
   actualHours: z.number().min(0, '実績工数は0以上で入力してください').nullable().optional(),
+  categoryIds: z.array(z.string()).optional(),
 })
 
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>

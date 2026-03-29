@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { format } from 'date-fns'
 
 import {
@@ -46,6 +46,12 @@ interface Pagination {
   perPage: number
   total: number
   totalPages: number
+}
+
+interface CategoryItem {
+  id: string
+  name: string
+  color: string
 }
 
 interface TaskListViewProps {
@@ -121,8 +127,26 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
   const [sortBy, setSortBy] = useState<SortByField>('taskNumber')
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
   const [loading, setLoading] = useState(true)
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
+  const [showCategoryFilter, setShowCategoryFilter] = useState(false)
 
-  const fetchTasks = useCallback(async (page: number, sort: SortByField, order: SortOrder) => {
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/categories`)
+        if (res.ok) {
+          const json = await res.json()
+          setCategories(json.data)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchCategories()
+  }, [projectId])
+
+  const fetchTasks = useCallback(async (page: number, sort: SortByField, order: SortOrder, catIds: string[] = []) => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -131,6 +155,9 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
         sortBy: sort,
         sortOrder: order,
       })
+      if (catIds.length > 0) {
+        params.set('categoryIds', catIds.join(','))
+      }
       const res = await fetch(`/api/projects/${projectId}/tasks?${params}`)
       if (!res.ok) throw new Error('タスクの取得に失敗しました')
       const json = await res.json()
@@ -145,19 +172,32 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
   }, [projectId])
 
   useEffect(() => {
-    fetchTasks(pagination.page, sortBy, sortOrder)
+    fetchTasks(pagination.page, sortBy, sortOrder, selectedCategoryIds)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSort = (field: SortByField) => {
     const newOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc'
     setSortBy(field)
     setSortOrder(newOrder)
-    fetchTasks(1, field, newOrder)
+    fetchTasks(1, field, newOrder, selectedCategoryIds)
   }
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > pagination.totalPages) return
-    fetchTasks(newPage, sortBy, sortOrder)
+    fetchTasks(newPage, sortBy, sortOrder, selectedCategoryIds)
+  }
+
+  const toggleCategoryFilter = (categoryId: string) => {
+    const newIds = selectedCategoryIds.includes(categoryId)
+      ? selectedCategoryIds.filter((id) => id !== categoryId)
+      : [...selectedCategoryIds, categoryId]
+    setSelectedCategoryIds(newIds)
+    fetchTasks(1, sortBy, sortOrder, newIds)
+  }
+
+  const clearCategoryFilter = () => {
+    setSelectedCategoryIds([])
+    fetchTasks(1, sortBy, sortOrder, [])
   }
 
   const handleRowClick = (taskId: string) => {
@@ -177,6 +217,57 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
 
   return (
     <div>
+      {categories.length > 0 && (
+        <div className="mb-4 flex items-center gap-2">
+          <button
+            onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+              selectedCategoryIds.length > 0
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-foreground/20 text-foreground/60 hover:bg-foreground/5'
+            }`}
+          >
+            <Filter size={14} />
+            カテゴリ
+            {selectedCategoryIds.length > 0 && (
+              <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
+                {selectedCategoryIds.length}
+              </span>
+            )}
+          </button>
+          {showCategoryFilter && (
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map((cat) => {
+                const isSelected = selectedCategoryIds.includes(cat.id)
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategoryFilter(cat.id)}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-opacity ${
+                      isSelected ? 'opacity-100' : 'opacity-50 hover:opacity-75'
+                    }`}
+                    style={{
+                      backgroundColor: `color-mix(in oklch, ${cat.color} 15%, transparent)`,
+                      color: cat.color,
+                    }}
+                  >
+                    {cat.name}
+                  </button>
+                )
+              })}
+              {selectedCategoryIds.length > 0 && (
+                <button
+                  onClick={clearCategoryFilter}
+                  className="rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground/50 hover:text-foreground/80"
+                >
+                  クリア
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>

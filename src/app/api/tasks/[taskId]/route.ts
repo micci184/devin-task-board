@@ -136,7 +136,8 @@ export const PATCH = async (
       )
     }
 
-    const data = parsed.data
+    const { categoryIds: rawCategoryIds, ...data } = parsed.data
+    const uniqueCategoryIds = rawCategoryIds ? [...new Set(rawCategoryIds)] : undefined
 
     const updateData: Record<string, unknown> = {}
     if (data.title !== undefined) updateData.title = data.title
@@ -149,6 +150,26 @@ export const PATCH = async (
     if (data.actualHours !== undefined) updateData.actualHours = data.actualHours
 
     const updatedTask = await prisma.$transaction(async (tx) => {
+      if (uniqueCategoryIds !== undefined) {
+        if (uniqueCategoryIds.length > 0) {
+          const validCategories = await tx.category.findMany({
+            where: { id: { in: uniqueCategoryIds }, projectId: task.projectId },
+            select: { id: true },
+          })
+          if (validCategories.length !== uniqueCategoryIds.length) {
+            throw new Error('INVALID_CATEGORY')
+          }
+        }
+
+        await tx.taskCategory.deleteMany({ where: { taskId } })
+
+        if (uniqueCategoryIds.length > 0) {
+          await tx.taskCategory.createMany({
+            data: uniqueCategoryIds.map((categoryId) => ({ taskId, categoryId })),
+          })
+        }
+      }
+
       const updated = await tx.task.update({
         where: { id: taskId },
         data: updateData,
@@ -234,6 +255,17 @@ export const PATCH = async (
 
     return NextResponse.json({ data: updatedTask })
   } catch (error) {
+    if (error instanceof Error && error.message === 'INVALID_CATEGORY') {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: '指定されたカテゴリが見つからないか、このプロジェクトに属していません',
+          },
+        },
+        { status: 400 },
+      )
+    }
     console.error('[PATCH /api/tasks/[taskId]]', error)
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'サーバーエラーが発生しました' } },

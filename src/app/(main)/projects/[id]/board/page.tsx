@@ -24,14 +24,21 @@ const BoardPage = async ({ params }: BoardPageProps) => {
     redirect('/projects')
   }
 
-  const tasks = await prisma.task.findMany({
-    where: { projectId },
-    include: {
-      assignee: { select: { id: true, name: true, avatarUrl: true } },
-      reporter: { select: { id: true, name: true, avatarUrl: true } },
-    },
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-  })
+  const [tasks, categories] = await Promise.all([
+    prisma.task.findMany({
+      where: { projectId },
+      include: {
+        assignee: { select: { id: true, name: true, avatarUrl: true } },
+        reporter: { select: { id: true, name: true, avatarUrl: true } },
+        taskCategories: { include: { category: true } },
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    }),
+    prisma.category.findMany({
+      where: { projectId },
+      orderBy: { name: 'asc' },
+    }),
+  ])
 
   const serializedTasks = tasks.map((task) => ({
     ...task,
@@ -54,6 +61,7 @@ const BoardPage = async ({ params }: BoardPageProps) => {
         tasks={serializedTasks}
         projectId={projectId}
         projectKey={project.key}
+        categories={categories}
       />
     </div>
   )
