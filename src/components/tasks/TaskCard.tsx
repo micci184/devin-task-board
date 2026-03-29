@@ -1,6 +1,7 @@
 'use client'
 
-import { useDraggable } from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -31,7 +32,7 @@ interface TaskCardProps {
   projectKey: string
 }
 
-interface DraggableTaskCardProps extends TaskCardProps {
+interface SortableTaskCardProps extends TaskCardProps {
   isDragOverlay: boolean
 }
 
@@ -99,14 +100,25 @@ export const TaskCard = ({ task, projectKey }: TaskCardProps) => {
   )
 }
 
-export const DraggableTaskCard = ({ task, projectKey, isDragOverlay }: DraggableTaskCardProps) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: task.id,
-  })
+export const SortableTaskCard = ({ task, projectKey, isDragOverlay }: SortableTaskCardProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
 
   return (
     <div
       ref={setNodeRef}
+      style={style}
       {...listeners}
       {...attributes}
       className={isDragging || isDragOverlay ? 'opacity-30' : ''}

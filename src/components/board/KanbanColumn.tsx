@@ -3,9 +3,10 @@
 import { useRef, useState } from 'react'
 
 import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 
-import { DraggableTaskCard } from '@/components/tasks/TaskCard'
+import { SortableTaskCard } from '@/components/tasks/TaskCard'
 
 import type { Priority, TaskStatus } from '@prisma/client'
 
@@ -15,6 +16,7 @@ interface Task {
   title: string
   priority: Priority
   status: TaskStatus
+  sortOrder: number
   dueDate: string | Date | null
   assignee: {
     id: string
@@ -125,14 +127,16 @@ export const KanbanColumn = ({
             </p>
           </div>
         )}
-        {tasks.map((task) => (
-          <DraggableTaskCard
-            key={task.id}
-            task={task}
-            projectKey={projectKey}
-            isDragOverlay={activeTaskId === task.id}
-          />
-        ))}
+        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          {tasks.map((task) => (
+            <SortableTaskCard
+              key={task.id}
+              task={task}
+              projectKey={projectKey}
+              isDragOverlay={activeTaskId === task.id}
+            />
+          ))}
+        </SortableContext>
       </div>
     </div>
   )
