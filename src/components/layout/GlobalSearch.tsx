@@ -166,9 +166,18 @@ export const GlobalSearch = () => {
   )
 
   const handleClear = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+    if (abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+    }
     setQuery('')
     setResults([])
     setHasSearched(false)
+    setIsLoading(false)
     setIsOpen(false)
     inputRef.current?.focus()
   }, [])
