@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, X, FileText, SlidersHorizontal, Calendar, ChevronDown } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -191,6 +191,8 @@ export const GlobalSearch = () => {
   const [categories, setCategories] = useState<FilterCategory[]>([])
   const [optionsLoaded, setOptionsLoaded] = useState(false)
 
+  const [filterPanelHeight, setFilterPanelHeight] = useState(0)
+
   const containerRef = useRef<HTMLDivElement>(null)
   const filterPanelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -363,6 +365,15 @@ export const GlobalSearch = () => {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // フィルターパネルの高さを計測（DOM コミット後に同期的に取得）
+  useLayoutEffect(() => {
+    if (showFilters && filterPanelRef.current) {
+      setFilterPanelHeight(filterPanelRef.current.offsetHeight)
+    } else {
+      setFilterPanelHeight(0)
+    }
+  }, [showFilters, filters, assignees, categories])
 
   // Clean up debounce and abort on unmount
   useEffect(() => {
@@ -552,7 +563,7 @@ export const GlobalSearch = () => {
       {showDropdown && (
         <div
           className="absolute left-0 z-50 w-[480px] max-h-[400px] overflow-y-auto rounded-md border border-foreground/10 bg-background shadow-lg"
-          style={{ top: showFilters && filterPanelRef.current ? `calc(100% + ${filterPanelRef.current.offsetHeight + 8}px)` : 'calc(100% + 4px)' }}
+          style={{ top: showFilters && filterPanelHeight > 0 ? `calc(100% + ${filterPanelHeight + 8}px)` : 'calc(100% + 4px)' }}
         >
           {isLoading ? (
             <div className="p-3 space-y-3">
