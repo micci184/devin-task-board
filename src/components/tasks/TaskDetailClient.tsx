@@ -18,6 +18,7 @@ import {
   X,
   Pencil,
   ChevronDown,
+  Trash2,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -659,15 +660,79 @@ const InlineEditNumber = ({
   )
 }
 
+// --- Delete Confirmation Dialog ---
+
+const DeleteConfirmDialog = ({
+  taskKey,
+  onConfirm,
+  onCancel,
+  isDeleting,
+}: {
+  taskKey: string
+  onConfirm: () => void
+  onCancel: () => void
+  isDeleting: boolean
+}) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/50" onClick={onCancel} />
+      <div className="relative z-50 w-full max-w-md rounded-lg border border-foreground/10 bg-background p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-foreground">タスクの削除</h3>
+        <p className="mt-2 text-sm text-foreground/60">
+          <span className="font-medium text-foreground">{taskKey}</span> を削除しますか？
+        </p>
+        <p className="mt-1 text-sm text-foreground/60">
+          関連するコメント・添付ファイル・サブタスクもすべて削除されます。この操作は取り消せません。
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            disabled={isDeleting}
+            className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/60 hover:bg-foreground/5 disabled:opacity-50"
+          >
+            キャンセル
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="rounded-md bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90 disabled:opacity-50"
+          >
+            {isDeleting ? '削除中...' : '削除する'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // --- Main Component ---
 
 export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit }: TaskDetailClientProps) => {
   const router = useRouter()
   const [task, setTask] = useState<TaskData>(initialTask)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleUpdated = (updatedTask: TaskData) => {
     setTask(updatedTask)
     router.refresh()
+  }
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, { method: 'DELETE' })
+      if (!res.ok && res.status !== 204) {
+        const json = await res.json()
+        throw new Error(json.error?.message ?? 'タスクの削除に失敗しました')
+      }
+      toast.success(`${task.project.key}-${task.taskNumber} を削除しました`)
+      router.push(`/projects/${task.projectId}/board`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'タスクの削除に失敗しました')
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
+    }
   }
 
   const status = statusConfig[task.status]
@@ -695,6 +760,15 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit }:
             canEdit={canEdit}
             onUpdated={handleUpdated}
           />
+          {canEdit && (
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="ml-auto mt-1 shrink-0 rounded-md p-1.5 text-foreground/40 transition-colors hover:bg-danger/10 hover:text-danger"
+              title="タスクを削除"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -949,6 +1023,15 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit }:
           </div>
         </div>
       </div>
+
+      {showDeleteDialog && (
+        <DeleteConfirmDialog
+          taskKey={`${task.project.key}-${task.taskNumber}`}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteDialog(false)}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   )
 }
