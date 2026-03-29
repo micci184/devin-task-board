@@ -143,7 +143,7 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
             </div>
 
             <div className="flex items-center gap-2">
-              {canManage && !isOwner ? (
+              {canManage && !isOwner && !isSelf ? (
                 <select
                   value={member.role}
                   onChange={(e) => handleRoleChange(member, e.target.value as ProjectRole)}
