@@ -35,6 +35,22 @@ export const PATCH = async (
       )
     }
 
+    const member = await prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: comment.task.projectId,
+          userId: session.user.id,
+        },
+      },
+    })
+
+    if (!member) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'このプロジェクトへのアクセス権がありません' } },
+        { status: 403 },
+      )
+    }
+
     if (comment.authorId !== session.user.id) {
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: '自分のコメントのみ編集できます' } },
@@ -101,6 +117,22 @@ export const DELETE = async (
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'コメントが見つかりません' } },
         { status: 404 },
+      )
+    }
+
+    const member = await prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: comment.task.projectId,
+          userId: session.user.id,
+        },
+      },
+    })
+
+    if (!member) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'このプロジェクトへのアクセス権がありません' } },
+        { status: 403 },
       )
     }
 
