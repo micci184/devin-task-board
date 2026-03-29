@@ -78,6 +78,7 @@ const TaskDetailPage = async ({ params }: TaskDetailPageProps) => {
       task={serializedTask}
       projectMembers={projectMembers}
       canEdit={canEdit}
+      currentUserId={session.user.id}
     />
   )
 }
