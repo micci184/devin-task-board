@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import {
@@ -55,6 +55,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
   const router = useRouter()
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
+  const dragOriginalStatusRef = useRef<TaskStatus | null>(null)
 
   useEffect(() => {
     setLocalTasks(tasks)
@@ -125,7 +126,10 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
   }
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveTaskId(event.active.id as string)
+    const taskId = event.active.id as string
+    const task = localTasks.find((t) => t.id === taskId)
+    dragOriginalStatusRef.current = task?.status ?? null
+    setActiveTaskId(taskId)
   }
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -184,7 +188,9 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
     if (!task) return
 
     const validStatuses = columns.map((c) => c.status)
-    const currentStatus = task.status
+    const originalStatus = dragOriginalStatusRef.current
+    const currentStatus = originalStatus ?? task.status
+    dragOriginalStatusRef.current = null
 
     const isOverColumn = validStatuses.includes(overId as TaskStatus)
     const overTask = !isOverColumn ? localTasks.find((t) => t.id === overId) : null
@@ -298,6 +304,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
 
   const handleDragCancel = () => {
     setActiveTaskId(null)
+    dragOriginalStatusRef.current = null
     setLocalTasks(tasks)
   }
 

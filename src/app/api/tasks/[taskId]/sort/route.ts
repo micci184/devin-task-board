@@ -72,12 +72,30 @@ export const PATCH = async (
 
     const { sortOrder, status } = parsed.data
 
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: {
-        sortOrder,
-        ...(status !== undefined ? { status } : {}),
-      },
+    const updatedTask = await prisma.$transaction(async (tx) => {
+      const updated = await tx.task.update({
+        where: { id: taskId },
+        data: {
+          sortOrder,
+          ...(status !== undefined ? { status } : {}),
+        },
+      })
+
+      if (status !== undefined && status !== task.status) {
+        await tx.activityLog.create({
+          data: {
+            action: 'STATUS_CHANGED',
+            entityType: 'task',
+            entityId: taskId,
+            userId: session.user.id,
+            projectId: task.projectId,
+            oldValue: { status: task.status },
+            newValue: { status },
+          },
+        })
+      }
+
+      return updated
     })
 
     return NextResponse.json({ data: updatedTask })
