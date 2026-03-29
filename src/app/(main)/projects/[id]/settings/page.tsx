@@ -54,13 +54,13 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
     redirect('/projects')
   }
 
-  if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
+  if (membership.role === 'VIEWER') {
     redirect('/projects')
   }
 
   const isOwner = project.ownerId === session.user.id
-  const canInvite = membership.role === 'OWNER' || membership.role === 'ADMIN'
-  const canManageCategories = membership.role === 'OWNER' || membership.role === 'ADMIN' || membership.role === 'MEMBER'
+  const isAdmin = membership.role === 'OWNER' || membership.role === 'ADMIN'
+  const canManageCategories = true
 
   const serializedMembers = members.map((m) => ({
     id: m.id,
@@ -85,30 +85,32 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
       </div>
 
       <div className="space-y-8">
-        <ProjectSettingsForm
-          projectId={project.id}
-          defaultName={project.name}
-          defaultDescription={project.description ?? ''}
-        />
+        {isAdmin && (
+          <ProjectSettingsForm
+            projectId={project.id}
+            defaultName={project.name}
+            defaultDescription={project.description ?? ''}
+          />
+        )}
 
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
-            メンバー（{members.length}人）
-          </h2>
+        {isAdmin && (
+          <section>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">
+              メンバー（{members.length}人）
+            </h2>
 
-          {canInvite && (
             <div className="mb-6 rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
               <h3 className="mb-3 text-sm font-medium text-foreground">メンバーを招待</h3>
               <InviteMemberForm projectId={projectId} />
             </div>
-          )}
 
-          <MemberList
-            members={serializedMembers}
-            currentUserId={session.user.id}
-            currentUserRole={membership.role}
-          />
-        </section>
+            <MemberList
+              members={serializedMembers}
+              currentUserId={session.user.id}
+              currentUserRole={membership.role}
+            />
+          </section>
+        )}
 
         <section>
           <h2 className="mb-4 text-lg font-semibold text-foreground">
@@ -135,7 +137,7 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
           />
         </section>
 
-        {isOwner && <ProjectDeleteSection projectId={project.id} projectName={project.name} />}
+        {isOwner && isAdmin && <ProjectDeleteSection projectId={project.id} projectName={project.name} />}
       </div>
     </div>
   )
