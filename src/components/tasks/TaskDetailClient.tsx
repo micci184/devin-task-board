@@ -694,7 +694,7 @@ const SubtaskSection = ({
 
   const handleCreate = async () => {
     const trimmed = title.trim()
-    if (!trimmed) return
+    if (!trimmed || creating) return
 
     setCreating(true)
     try {
