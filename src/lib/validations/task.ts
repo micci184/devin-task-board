@@ -42,3 +42,10 @@ export const createSubtaskSchema = z.object({
 })
 
 export type CreateSubtaskInput = z.infer<typeof createSubtaskSchema>
+
+export const updateTaskSortSchema = z.object({
+  sortOrder: z.number().int('並び順は整数で指定してください'),
+  status: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']).optional(),
+})
+
+export type UpdateTaskSortInput = z.infer<typeof updateTaskSortSchema>
