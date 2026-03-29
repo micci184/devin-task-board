@@ -795,7 +795,7 @@ const SubtaskSection = ({
           {task.subtasks.map((subtask) => {
             const subtaskStatus = statusConfig[subtask.status]
             const subtaskDueDate = subtask.dueDate ? new Date(subtask.dueDate) : null
-            const isOverdue = subtaskDueDate ? subtaskDueDate < new Date() : false
+            const isOverdue = subtaskDueDate && subtask.status !== 'DONE' ? subtaskDueDate < new Date() : false
             return (
               <li key={subtask.id}>
                 <Link
