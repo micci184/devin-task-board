@@ -73,6 +73,13 @@ export const PATCH = async (
       )
     }
 
+    if (targetMember.role === 'OWNER') {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'オーナーの権限は変更できません' } },
+        { status: 403 },
+      )
+    }
+
     const body = await request.json()
     const parsed = updateMemberRoleSchema.safeParse(body)
 
