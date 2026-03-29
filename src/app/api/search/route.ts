@@ -42,10 +42,18 @@ export const GET = async (request: NextRequest) => {
 
     const { q, status, priority, assigneeId, categoryId, dueDateFrom, dueDateTo } = parsed.data
 
-    // Find tasks matching the keyword via comments
+    // Filter by projects the user has access to
+    const memberships = await prisma.projectMember.findMany({
+      where: { userId: session.user.id },
+      select: { projectId: true },
+    })
+    const accessibleProjectIds = memberships.map((m) => m.projectId)
+
+    // Find tasks matching the keyword via comments (scoped to accessible projects)
     const commentMatchTaskIds = await prisma.comment.findMany({
       where: {
         content: { contains: q, mode: 'insensitive' },
+        task: { projectId: { in: accessibleProjectIds } },
       },
       select: { taskId: true },
       distinct: ['taskId'],
@@ -101,6 +109,7 @@ export const GET = async (request: NextRequest) => {
     }
 
     const where = {
+      projectId: { in: accessibleProjectIds },
       OR: orConditions,
       ...(andConditions.length > 0 ? { AND: andConditions } : {}),
     }
