@@ -192,6 +192,7 @@ export const GlobalSearch = () => {
   const [optionsLoaded, setOptionsLoaded] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const filterPanelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -207,10 +208,10 @@ export const GlobalSearch = () => {
         setCategories(json.data.categories)
       }
     } catch {
-      // ignore
-    } finally {
-      setOptionsLoaded(true)
+      // ignore – don't set optionsLoaded so next toggle retries
+      return
     }
+    setOptionsLoaded(true)
   }, [optionsLoaded])
 
   /** フィルターパラメータをクエリ文字列に変換 */
@@ -435,7 +436,7 @@ export const GlobalSearch = () => {
 
       {/* フィルターパネル */}
       {showFilters && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-[520px] rounded-md border border-foreground/10 bg-background p-3 shadow-lg">
+        <div ref={filterPanelRef} className="absolute left-0 top-full z-50 mt-1 w-[520px] rounded-md border border-foreground/10 bg-background p-3 shadow-lg">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-medium text-foreground/60">フィルター</span>
             {hasActiveFilters(filters) && (
@@ -553,7 +554,7 @@ export const GlobalSearch = () => {
       {showDropdown && (
         <div
           className="absolute left-0 z-50 w-[480px] max-h-[400px] overflow-y-auto rounded-md border border-foreground/10 bg-background shadow-lg"
-          style={{ top: showFilters ? 'calc(100% + 148px)' : 'calc(100% + 4px)' }}
+          style={{ top: showFilters && filterPanelRef.current ? `calc(100% + ${filterPanelRef.current.offsetHeight + 8}px)` : 'calc(100% + 4px)' }}
         >
           {isLoading ? (
             <div className="p-3 space-y-3">
