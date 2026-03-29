@@ -69,12 +69,9 @@ const formatFieldValue = (field: string, value: unknown): string => {
   if (field === 'status') return STATUS_LABELS[String(value)] ?? String(value)
   if (field === 'priority') return PRIORITY_LABELS[String(value)] ?? String(value)
   if (field === 'dueDate') {
-    try {
-      const date = new Date(String(value))
-      return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
-    } catch {
-      return String(value)
-    }
+    const date = new Date(String(value))
+    if (isNaN(date.getTime())) return String(value)
+    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
   }
   if (field === 'estimatedHours' || field === 'actualHours') {
     return `${value}h`
