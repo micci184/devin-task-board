@@ -164,6 +164,42 @@ export const POST = async (
         },
       })
 
+      // @[ユーザー名] 形式のメンション解析 → 通知作成
+      const mentionPattern = /@\[([^\]]+)\]/g
+      const mentionedNames = new Set<string>()
+      let match: RegExpExecArray | null
+      while ((match = mentionPattern.exec(parsed.data.content)) !== null) {
+        mentionedNames.add(match[1])
+      }
+
+      if (mentionedNames.size > 0) {
+        const projectMembers = await tx.projectMember.findMany({
+          where: { projectId: task.projectId },
+          include: { user: { select: { id: true, name: true } } },
+        })
+
+        const taskKey = `${task.project.key}-${task.taskNumber}`
+        const taskUrl = `/projects/${task.projectId}/tasks/${taskId}`
+
+        const notifications = projectMembers
+          .filter(
+            (pm) =>
+              mentionedNames.has(pm.user.name) &&
+              pm.user.id !== session.user.id,
+          )
+          .map((pm) => ({
+            type: 'MENTIONED' as const,
+            title: `${created.author.name} があなたをメンションしました`,
+            message: `${taskKey} のコメントであなたがメンションされました`,
+            userId: pm.user.id,
+            linkUrl: taskUrl,
+          }))
+
+        if (notifications.length > 0) {
+          await tx.notification.createMany({ data: notifications })
+        }
+      }
+
       return created
     })
 
