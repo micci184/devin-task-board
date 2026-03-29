@@ -65,6 +65,16 @@ export const createProject = async (
             role: 'OWNER',
           },
         },
+        categories: {
+          createMany: {
+            data: [
+              { name: 'バグ', color: 'oklch(0.55 0.22 27)' },
+              { name: '機能追加', color: 'oklch(0.55 0.12 250)' },
+              { name: '改善', color: 'oklch(0.55 0.15 160)' },
+              { name: 'ドキュメント', color: 'oklch(0.55 0.15 300)' },
+            ],
+          },
+        },
       },
     })
   })
