@@ -96,7 +96,11 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
             </div>
           )}
 
-          <MemberList members={serializedMembers} />
+          <MemberList
+            members={serializedMembers}
+            currentUserId={session.user.id}
+            currentUserRole={membership.role}
+          />
         </section>
 
         {isOwner && <ProjectDeleteSection projectId={project.id} projectName={project.name} />}
