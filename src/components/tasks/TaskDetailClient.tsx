@@ -25,6 +25,7 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 
 import { MarkdownPreview } from '@/components/tasks/MarkdownPreview'
+import { CommentList } from '@/components/comments/CommentList'
 
 import type { Priority, TaskStatus } from '@prisma/client'
 
@@ -80,6 +81,7 @@ interface TaskDetailClientProps {
   task: TaskData
   projectMembers: ProjectMemberItem[]
   canEdit: boolean
+  currentUserId: string
 }
 
 const statusConfig: Record<TaskStatus, { label: string; className: string }> = {
@@ -947,7 +949,7 @@ const DeleteConfirmDialog = ({
 
 // --- Main Component ---
 
-export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit }: TaskDetailClientProps) => {
+export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, currentUserId }: TaskDetailClientProps) => {
   const router = useRouter()
   const [task, setTask] = useState<TaskData>(initialTask)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -1069,15 +1071,19 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit }:
             onUpdated={handleUpdated}
           />
 
-          {/* Comments placeholder */}
+          {/* Comments */}
           <section className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2">
               <MessageSquare size={16} className="text-foreground/60" />
               <h2 className="text-sm font-semibold text-foreground">コメント</h2>
             </div>
-            <p className="mt-3 text-sm text-foreground/40">
-              コメント機能は今後実装予定です
-            </p>
+            <div className="mt-3">
+              <CommentList
+                taskId={task.id}
+                currentUserId={currentUserId}
+                canEdit={canEdit}
+              />
+            </div>
           </section>
 
           {/* Activity placeholder */}
