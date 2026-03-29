@@ -173,7 +173,7 @@ const CommentItem = ({
           </div>
         ) : (
           <div className="mt-1">
-            <MarkdownPreview content={comment.content} />
+            <MarkdownPreview content={comment.content} highlightMentions />
           </div>
         )}
       </div>
