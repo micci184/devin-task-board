@@ -213,7 +213,7 @@ export const TaskCreateModal = ({
                       style={{
                         backgroundColor: `color-mix(in oklch, ${cat.color} 15%, transparent)`,
                         color: cat.color,
-                        ...(isSelected ? { ringColor: cat.color } : {}),
+                        ...(isSelected ? { '--tw-ring-color': cat.color } as React.CSSProperties : {}),
                       }}
                     >
                       {cat.name}
