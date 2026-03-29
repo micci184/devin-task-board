@@ -1245,6 +1245,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
             <div className="mt-3">
               <CommentList
                 taskId={task.id}
+                projectId={task.projectId}
                 currentUserId={currentUserId}
                 canEdit={canEdit}
               />

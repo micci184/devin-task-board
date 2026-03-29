@@ -26,6 +26,7 @@ interface CommentData {
 
 interface CommentListProps {
   taskId: string
+  projectId: string
   currentUserId: string
   canEdit: boolean
 }
@@ -180,7 +181,7 @@ const CommentItem = ({
   )
 }
 
-export const CommentList = ({ taskId, currentUserId, canEdit }: CommentListProps) => {
+export const CommentList = ({ taskId, projectId, currentUserId, canEdit }: CommentListProps) => {
   const [comments, setComments] = useState<CommentData[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -249,7 +250,7 @@ export const CommentList = ({ taskId, currentUserId, canEdit }: CommentListProps
 
       {canEdit && (
         <div className="border-t border-foreground/10 pt-4">
-          <CommentForm taskId={taskId} onCommentAdded={handleCommentAdded} />
+          <CommentForm taskId={taskId} projectId={projectId} onCommentAdded={handleCommentAdded} />
         </div>
       )}
     </div>
