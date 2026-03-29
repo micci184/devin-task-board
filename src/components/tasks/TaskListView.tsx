@@ -138,6 +138,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
       setPagination(json.pagination)
     } catch {
       setTasks([])
+      setPagination({ page: 1, perPage: 20, total: 0, totalPages: 0 })
     } finally {
       setLoading(false)
     }
@@ -240,7 +241,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
               const status = statusConfig[task.status]
               const priority = priorityConfig[task.priority]
               const dueDate = task.dueDate ? new Date(task.dueDate) : null
-              const isOverdue = dueDate ? dueDate < new Date() : false
+              const isOverdue = dueDate && task.status !== 'DONE' ? dueDate < new Date() : false
 
               return (
                 <TableRow
