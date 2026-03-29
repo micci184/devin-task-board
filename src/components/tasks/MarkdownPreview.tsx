@@ -10,15 +10,15 @@ interface MarkdownPreviewProps {
 }
 
 const renderTextWithMentions = (text: string) => {
-  const parts = text.split(/(@[\w\u3000-\u9FFF\uF900-\uFAFF]+)/g)
+  const parts = text.split(/(@\[[^\]]+\])/g)
   return parts.map((part, i) => {
-    if (part.match(/^@[\w\u3000-\u9FFF\uF900-\uFAFF]+$/)) {
+    if (part.match(/^@\[[^\]]+\]$/)) {
       return (
         <span
           key={i}
           className="rounded bg-primary/10 px-1 py-0.5 font-medium text-primary"
         >
-          {part}
+          {part.slice(0, 1)}{part.slice(2, -1)}
         </span>
       )
     }

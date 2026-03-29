@@ -57,8 +57,9 @@ export const CommentForm = ({ taskId, projectId, onCommentAdded }: CommentFormPr
     const cursorPos = e.target.selectionStart
     const textBeforeCursor = value.substring(0, cursorPos)
 
-    // `@` の直後のテキストを検出
-    const atMatch = textBeforeCursor.match(/@([^\s@]*)$/)
+    // `@` または `@[...]` の入力中テキストを検出
+    const bracketMatch = textBeforeCursor.match(/@\[([^\]]*)$/)
+    const atMatch = bracketMatch ?? textBeforeCursor.match(/@([^\s@]*)$/)
     if (atMatch) {
       setShowSuggest(true)
       setMentionQuery(atMatch[1])
@@ -75,7 +76,7 @@ export const CommentForm = ({ taskId, projectId, onCommentAdded }: CommentFormPr
 
     const before = content.substring(0, mentionStart)
     const after = content.substring(textareaRef.current.selectionStart)
-    const newContent = `${before}@${user.name} ${after}`
+    const newContent = `${before}@[${user.name}] ${after}`
     setContent(newContent)
     setShowSuggest(false)
     setMentionQuery('')
@@ -83,7 +84,7 @@ export const CommentForm = ({ taskId, projectId, onCommentAdded }: CommentFormPr
 
     requestAnimationFrame(() => {
       if (textareaRef.current) {
-        const pos = before.length + user.name.length + 2
+        const pos = before.length + user.name.length + 4
         textareaRef.current.selectionStart = pos
         textareaRef.current.selectionEnd = pos
         textareaRef.current.focus()

@@ -164,8 +164,8 @@ export const POST = async (
         },
       })
 
-      // @メンション解析 → 通知作成
-      const mentionPattern = /@([\w\u3000-\u9FFF\uF900-\uFAFF]+)/g
+      // @[ユーザー名] 形式のメンション解析 → 通知作成
+      const mentionPattern = /@\[([^\]]+)\]/g
       const mentionedNames = new Set<string>()
       let match: RegExpExecArray | null
       while ((match = mentionPattern.exec(parsed.data.content)) !== null) {
