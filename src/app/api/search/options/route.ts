@@ -25,22 +25,22 @@ export const GET = async () => {
     })
     const accessibleProjectIds = memberships.map((m) => m.projectId)
 
-    // アクセス可能なプロジェクトのメンバー（重複排除）
-    const members = await prisma.projectMember.findMany({
-      where: { projectId: { in: accessibleProjectIds } },
-      select: {
-        user: { select: { id: true, name: true, avatarUrl: true } },
-      },
-      distinct: ['userId'],
-    })
+    // アクセス可能なプロジェクトのメンバー（重複排除）とカテゴリを並列取得
+    const [members, categories] = await Promise.all([
+      prisma.projectMember.findMany({
+        where: { projectId: { in: accessibleProjectIds } },
+        select: {
+          user: { select: { id: true, name: true, avatarUrl: true } },
+        },
+        distinct: ['userId'],
+      }),
+      prisma.category.findMany({
+        where: { projectId: { in: accessibleProjectIds } },
+        select: { id: true, name: true, color: true, projectId: true },
+        orderBy: { name: 'asc' },
+      }),
+    ])
     const assignees = members.map((m) => m.user)
-
-    // アクセス可能なプロジェクトのカテゴリ
-    const categories = await prisma.category.findMany({
-      where: { projectId: { in: accessibleProjectIds } },
-      select: { id: true, name: true, color: true, projectId: true },
-      orderBy: { name: 'asc' },
-    })
 
     return NextResponse.json({
       data: { assignees, categories },

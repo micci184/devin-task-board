@@ -202,16 +202,14 @@ export const GlobalSearch = () => {
     if (optionsLoaded) return
     try {
       const res = await fetch('/api/search/options')
-      if (res.ok) {
-        const json = await res.json()
-        setAssignees(json.data.assignees)
-        setCategories(json.data.categories)
-      }
+      if (!res.ok) return
+      const json = await res.json()
+      setAssignees(json.data.assignees)
+      setCategories(json.data.categories)
+      setOptionsLoaded(true)
     } catch {
       // ignore – don't set optionsLoaded so next toggle retries
-      return
     }
-    setOptionsLoaded(true)
   }, [optionsLoaded])
 
   /** フィルターパラメータをクエリ文字列に変換 */
