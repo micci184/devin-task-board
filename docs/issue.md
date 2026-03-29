@@ -11,10 +11,10 @@
 | -------- | ------------------ | -------- | --------- |
 | Phase 0  | 環境構築           | 6        | 6/6 ✅    |
 | Phase 1  | 基盤・ドキュメント | 5        | 5/5 ✅    |
-| Phase 2  | コア機能           | 12       | 7/12      |
-| Phase 3  | 拡張機能           | 8        | 0/8       |
+| Phase 2  | コア機能           | 12       | 12/12 ✅  |
+| Phase 3  | 拡張機能           | 8        | 1/8       |
 | Phase 4  | UX・運用機能       | 13       | 0/13      |
-| **合計** |                    | **44**   | **18/44** |
+| **合計** |                    | **44**   | **24/44** |
 
 ---
 
@@ -89,19 +89,19 @@
 | 12  | タスク詳細画面                          | `phase:2`, `priority:high`, `type:fullstack`   | US-10  | `size:M`  | ✅     |
 | 13  | タスクのインライン編集                  | `phase:2`, `priority:high`, `type:frontend`    | US-10  | `size:S`  | ✅     |
 | 14  | タスク削除                              | `phase:2`, `priority:medium`, `type:fullstack` | US-11  | `size:XS` | ✅     |
-| 15  | サブタスク機能                          | `phase:2`, `priority:medium`, `type:fullstack` | US-12  | `size:M`  |        |
+| 15  | サブタスク機能                          | `phase:2`, `priority:medium`, `type:fullstack` | US-12  | `size:M`  | ✅     |
 | 16  | カンバン D&D（カラム間ステータス変更）  | `phase:2`, `priority:high`, `type:frontend`    | US-14  | `size:M`  | ✅     |
-| 58  | カンバン D&D（カラム内並び替え）        | `phase:2`, `priority:medium`, `type:frontend`  | US-14  | `size:S`  |        |
-| 17  | カンバン クイック作成                   | `phase:2`, `priority:medium`, `type:fullstack` | US-15  | `size:XS` |        |
+| 58  | カンバン D&D（カラム内並び替え）        | `phase:2`, `priority:medium`, `type:frontend`  | US-14  | `size:S`  | ✅     |
+| 17  | カンバン クイック作成                   | `phase:2`, `priority:medium`, `type:fullstack` | US-15  | `size:XS` | ✅     |
 | 18  | タスク一覧（リストビュー）完成          | `phase:2`, `priority:high`, `type:frontend`    | US-16  | `size:M`  | ✅     |
-| 19  | カテゴリ/ラベル管理                     | `phase:2`, `priority:medium`, `type:fullstack` | US-20  | `size:S`  |        |
-| 20  | タスクへのカテゴリ付与 + フィルタリング | `phase:2`, `priority:medium`, `type:fullstack` | US-20  | `size:M`  |        |
+| 19  | カテゴリ/ラベル管理                     | `phase:2`, `priority:medium`, `type:fullstack` | US-20  | `size:S`  | ✅     |
+| 20  | タスクへのカテゴリ付与 + フィルタリング | `phase:2`, `priority:medium`, `type:fullstack` | US-20  | `size:M`  | ✅     |
 
 ## Phase 3: 拡張機能（8 Issue）
 
 | #   | タイトル                                      | Labels                                         | 対応US | Size     | Status |
 | --- | --------------------------------------------- | ---------------------------------------------- | ------ | -------- | ------ |
-| 21  | コメント機能（CRUD）                          | `phase:3`, `priority:high`, `type:fullstack`   | US-19  | `size:M` |        |
+| 21  | コメント機能（CRUD）                          | `phase:3`, `priority:high`, `type:fullstack`   | US-19  | `size:M` | ✅     |
 | 22  | コメント @メンション                          | `phase:3`, `priority:medium`, `type:fullstack` | US-19  | `size:M` |        |
 | 23  | ファイル添付機能                              | `phase:3`, `priority:medium`, `type:fullstack` | US-21  | `size:L` |        |
 | 24  | グローバル検索                                | `phase:3`, `priority:high`, `type:fullstack`   | US-22  | `size:M` |        |
