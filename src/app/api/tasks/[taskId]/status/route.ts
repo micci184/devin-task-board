@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { updateTaskStatusSchema } from '@/lib/validations/task'
+import { notifyTaskStatusChanged } from '@/lib/notifications'
 
 import type { NextRequest } from 'next/server'
 
@@ -37,7 +38,15 @@ export const PATCH = async (
 
     const task = await prisma.task.findUnique({
       where: { id: taskId },
-      select: { id: true, status: true, projectId: true },
+      select: {
+        id: true,
+        status: true,
+        projectId: true,
+        assigneeId: true,
+        reporterId: true,
+        taskNumber: true,
+        project: { select: { key: true } },
+      },
     })
 
     if (!task) {
@@ -95,6 +104,22 @@ export const PATCH = async (
           newValue: { status: newStatus },
         },
       })
+
+      // 通知トリガー: ステータス変更
+      if (oldStatus !== newStatus) {
+        const taskKey = `${task.project.key}-${task.taskNumber}`
+        await notifyTaskStatusChanged(tx, {
+          changerUserId: session.user.id,
+          changerName: session.user.name ?? '',
+          taskKey,
+          taskId,
+          projectId: task.projectId,
+          assigneeId: task.assigneeId,
+          reporterId: task.reporterId,
+          oldStatus,
+          newStatus,
+        })
+      }
 
       return updated
     })

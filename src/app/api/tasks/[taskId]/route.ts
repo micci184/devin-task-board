@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { updateTaskSchema } from '@/lib/validations/task'
+import { notifyTaskAssigned, notifyTaskStatusChanged } from '@/lib/notifications'
 
 import type { NextRequest } from 'next/server'
 import type { ActivityAction, Prisma } from '@prisma/client'
@@ -99,10 +100,13 @@ export const PATCH = async (
         status: true,
         priority: true,
         assigneeId: true,
+        reporterId: true,
         dueDate: true,
         estimatedHours: true,
         actualHours: true,
         projectId: true,
+        taskNumber: true,
+        project: { select: { key: true } },
       },
     })
 
@@ -247,6 +251,36 @@ export const PATCH = async (
             oldValue: log.oldValue,
             newValue: log.newValue,
           },
+        })
+      }
+
+      // 通知トリガー: アサイン変更
+      if (data.assigneeId !== undefined && data.assigneeId !== task.assigneeId && data.assigneeId !== null) {
+        const taskKey = `${task.project.key}-${task.taskNumber}`
+        await notifyTaskAssigned(tx, {
+          assigneeId: data.assigneeId,
+          assignerUserId: session.user.id,
+          assignerName: session.user.name ?? '',
+          taskKey,
+          taskTitle: data.title ?? task.title,
+          projectId: task.projectId,
+          taskId,
+        })
+      }
+
+      // 通知トリガー: ステータス変更
+      if (data.status !== undefined && data.status !== task.status) {
+        const taskKey = `${task.project.key}-${task.taskNumber}`
+        await notifyTaskStatusChanged(tx, {
+          changerUserId: session.user.id,
+          changerName: session.user.name ?? '',
+          taskKey,
+          taskId,
+          projectId: task.projectId,
+          assigneeId: task.assigneeId,
+          reporterId: task.reporterId,
+          oldStatus: task.status,
+          newStatus: data.status,
         })
       }
 
