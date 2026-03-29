@@ -2289,24 +2289,14 @@ paths:
           in: query
           schema:
             type: string
-            enum:
-              - BACKLOG
-              - TODO
-              - IN_PROGRESS
-              - IN_REVIEW
-              - DONE
-          description: ステータスでフィルター
+            description: カンマ区切りで複数指定可（例: TODO,IN_PROGRESS）
+          description: ステータスでフィルター（複数選択可、カンマ区切り）
         - name: priority
           in: query
           schema:
             type: string
-            enum:
-              - URGENT
-              - HIGH
-              - MEDIUM
-              - LOW
-              - NONE
-          description: 優先度でフィルター
+            description: カンマ区切りで複数指定可（例: HIGH,URGENT）
+          description: 優先度でフィルター（複数選択可、カンマ区切り）
         - name: assigneeId
           in: query
           schema:
@@ -2316,7 +2306,8 @@ paths:
           in: query
           schema:
             type: string
-          description: カテゴリでフィルター
+            description: カンマ区切りで複数指定可
+          description: カテゴリでフィルター（複数選択可、カンマ区切り）
         - name: dueDateFrom
           in: query
           schema:
@@ -2343,6 +2334,44 @@ paths:
                     $ref: "#/components/schemas/SearchResult"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/search/options:
+    get:
+      tags:
+        - Search
+      summary: 検索フィルター選択肢取得
+      description: グローバル検索フィルターで使用する担当者・カテゴリの選択肢を返す。ユーザーがアクセス可能なプロジェクト横断で取得する。
+      operationId: searchOptions
+      responses:
+        "200":
+          description: フィルター選択肢取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - assignees
+                      - categories
+                    properties:
+                      assignees:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/UserSummary"
+                        description: 担当者候補一覧
+                      categories:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Category"
+                        description: カテゴリ候補一覧
         "401":
           $ref: "#/components/responses/Unauthorized"
         "500":
