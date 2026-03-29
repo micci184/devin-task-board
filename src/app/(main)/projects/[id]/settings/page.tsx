@@ -6,6 +6,8 @@ import { ProjectSettingsForm } from '@/components/projects/ProjectSettingsForm'
 import { ProjectDeleteSection } from '@/components/projects/ProjectDeleteSection'
 import { InviteMemberForm } from '@/components/members/InviteMemberForm'
 import { MemberList } from '@/components/members/MemberList'
+import { CategoryForm } from '@/components/categories/CategoryForm'
+import { CategoryList } from '@/components/categories/CategoryList'
 
 import type { ProjectRole } from '@prisma/client'
 
@@ -21,7 +23,7 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
 
   const { id: projectId } = await params
 
-  const [project, membership, members] = await Promise.all([
+  const [project, membership, members, categories] = await Promise.all([
     prisma.project.findUnique({
       where: { id: projectId },
     }),
@@ -42,18 +44,23 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
       },
       orderBy: { createdAt: 'asc' },
     }),
+    prisma.category.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'asc' },
+    }),
   ])
 
   if (!project || !membership) {
     redirect('/projects')
   }
 
-  if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
+  if (membership.role === 'VIEWER') {
     redirect('/projects')
   }
 
   const isOwner = project.ownerId === session.user.id
-  const canInvite = membership.role === 'OWNER' || membership.role === 'ADMIN'
+  const isAdmin = membership.role === 'OWNER' || membership.role === 'ADMIN'
+  const canManageCategories = true
 
   const serializedMembers = members.map((m) => ({
     id: m.id,
@@ -78,32 +85,59 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
       </div>
 
       <div className="space-y-8">
-        <ProjectSettingsForm
-          projectId={project.id}
-          defaultName={project.name}
-          defaultDescription={project.description ?? ''}
-        />
+        {isAdmin && (
+          <ProjectSettingsForm
+            projectId={project.id}
+            defaultName={project.name}
+            defaultDescription={project.description ?? ''}
+          />
+        )}
 
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
-            メンバー（{members.length}人）
-          </h2>
+        {isAdmin && (
+          <section>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">
+              メンバー（{members.length}人）
+            </h2>
 
-          {canInvite && (
             <div className="mb-6 rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
               <h3 className="mb-3 text-sm font-medium text-foreground">メンバーを招待</h3>
               <InviteMemberForm projectId={projectId} />
             </div>
+
+            <MemberList
+              members={serializedMembers}
+              currentUserId={session.user.id}
+              currentUserRole={membership.role}
+            />
+          </section>
+        )}
+
+        <section>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">
+            カテゴリ（{categories.length}件）
+          </h2>
+
+          {canManageCategories && (
+            <div className="mb-6 rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
+              <h3 className="mb-3 text-sm font-medium text-foreground">カテゴリを追加</h3>
+              <CategoryForm projectId={projectId} />
+            </div>
           )}
 
-          <MemberList
-            members={serializedMembers}
-            currentUserId={session.user.id}
-            currentUserRole={membership.role}
+          <CategoryList
+            categories={categories.map((c) => ({
+              id: c.id,
+              name: c.name,
+              color: c.color,
+              projectId: c.projectId,
+              createdAt: c.createdAt.toISOString(),
+              updatedAt: c.updatedAt.toISOString(),
+            }))}
+            canManage={canManageCategories}
           />
         </section>
 
-        {isOwner && <ProjectDeleteSection projectId={project.id} projectName={project.name} />}
+        {isOwner && isAdmin && <ProjectDeleteSection projectId={project.id} projectName={project.name} />}
       </div>
     </div>
   )

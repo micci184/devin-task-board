@@ -116,6 +116,15 @@ export const POST = async (request: NextRequest) => {
         },
       })
 
+      await tx.category.createMany({
+        data: [
+          { name: 'バグ', color: 'oklch(0.55 0.22 27)', projectId: created.id },
+          { name: '機能追加', color: 'oklch(0.55 0.12 250)', projectId: created.id },
+          { name: '改善', color: 'oklch(0.55 0.15 160)', projectId: created.id },
+          { name: 'ドキュメント', color: 'oklch(0.55 0.15 300)', projectId: created.id },
+        ],
+      })
+
       return created
     })
 
