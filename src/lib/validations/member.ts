@@ -8,3 +8,11 @@ export const inviteMemberSchema = z.object({
 })
 
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>
+
+export const updateMemberRoleSchema = z.object({
+  role: z.enum(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'], {
+    message: '有効な権限を選択してください',
+  }),
+})
+
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>
