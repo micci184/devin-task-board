@@ -969,6 +969,7 @@ const InlineSelectCategories = ({
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [optimisticIds, setOptimisticIds] = useState<string[] | null>(null)
+  const pendingRequests = useRef(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -1000,7 +1001,9 @@ const InlineSelectCategories = ({
   const selectedIds = optimisticIds ?? taskCategories.map((tc) => tc.category.id)
 
   useEffect(() => {
-    setOptimisticIds(null)
+    if (pendingRequests.current === 0) {
+      setOptimisticIds(null)
+    }
   }, [taskCategories])
 
   const handleToggle = async (categoryId: string) => {
@@ -1009,12 +1012,20 @@ const InlineSelectCategories = ({
       ? currentIds.filter((id) => id !== categoryId)
       : [...currentIds, categoryId]
     setOptimisticIds(newIds)
+    pendingRequests.current += 1
     try {
       const updated = await updateTask(taskId, { categoryIds: newIds })
+      pendingRequests.current -= 1
+      if (pendingRequests.current === 0) {
+        setOptimisticIds(null)
+      }
       onUpdated(updated)
       toast.success('カテゴリを更新しました')
     } catch (error) {
-      setOptimisticIds(null)
+      pendingRequests.current -= 1
+      if (pendingRequests.current === 0) {
+        setOptimisticIds(null)
+      }
       toast.error(error instanceof Error ? error.message : 'カテゴリの更新に失敗しました')
     }
   }
