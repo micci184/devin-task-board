@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
@@ -146,7 +146,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
     fetchCategories()
   }, [projectId])
 
-  const fetchTasks = useCallback(async (page: number, sort: SortByField, order: SortOrder, catIds: string[] = []) => {
+  const fetchTasks = async (page: number, sort: SortByField, order: SortOrder, catIds: string[] = []) => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -169,7 +169,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
     } finally {
       setLoading(false)
     }
-  }, [projectId])
+  }
 
   useEffect(() => {
     fetchTasks(pagination.page, sortBy, sortOrder, selectedCategoryIds)
