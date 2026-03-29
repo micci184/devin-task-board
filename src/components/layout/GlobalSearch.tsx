@@ -81,6 +81,7 @@ export const GlobalSearch = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -90,9 +91,19 @@ export const GlobalSearch = () => {
       return
     }
 
+    // Abort any in-flight request before starting a new one
+    if (abortRef.current) {
+      abortRef.current.abort()
+    }
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      const res = await fetch(
+        `/api/search?q=${encodeURIComponent(searchQuery.trim())}`,
+        { signal: controller.signal },
+      )
       if (res.ok) {
         const json = await res.json()
         setResults(json.data.tasks)
@@ -100,11 +111,18 @@ export const GlobalSearch = () => {
         setResults([])
       }
       setHasSearched(true)
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        // Request was cancelled by a newer search — do nothing
+        return
+      }
       setResults([])
       setHasSearched(true)
     } finally {
-      setIsLoading(false)
+      // Only clear loading if this controller is still the active one
+      if (abortRef.current === controller) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
@@ -118,6 +136,10 @@ export const GlobalSearch = () => {
       }
 
       if (!value.trim()) {
+        if (abortRef.current) {
+          abortRef.current.abort()
+          abortRef.current = null
+        }
         setResults([])
         setHasSearched(false)
         setIsLoading(false)
@@ -162,11 +184,14 @@ export const GlobalSearch = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Clean up debounce on unmount
+  // Clean up debounce and abort on unmount
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current)
+      }
+      if (abortRef.current) {
+        abortRef.current.abort()
       }
     }
   }, [])
