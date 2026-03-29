@@ -239,3 +239,90 @@ export const PATCH = async (
     )
   }
 }
+
+export const DELETE = async (
+  _request: NextRequest,
+  { params }: { params: Promise<{ taskId: string }> },
+) => {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: '認証が必要です' } },
+        { status: 401 },
+      )
+    }
+
+    const { taskId } = await params
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        title: true,
+        taskNumber: true,
+        projectId: true,
+        project: { select: { key: true } },
+      },
+    })
+
+    if (!task) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'タスクが見つかりません' } },
+        { status: 404 },
+      )
+    }
+
+    const member = await prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: task.projectId,
+          userId: session.user.id,
+        },
+      },
+    })
+
+    if (!member) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'このプロジェクトへのアクセス権がありません' } },
+        { status: 403 },
+      )
+    }
+
+    if (member.role === 'VIEWER') {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: '閲覧者はタスクを削除できません' } },
+        { status: 403 },
+      )
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.task.delete({
+        where: { id: taskId },
+      })
+
+      await tx.activityLog.create({
+        data: {
+          action: 'DELETED',
+          entityType: 'task',
+          entityId: taskId,
+          userId: session.user.id,
+          projectId: task.projectId,
+          oldValue: {
+            title: task.title,
+            taskNumber: task.taskNumber,
+            taskKey: `${task.project.key}-${task.taskNumber}`,
+          },
+        },
+      })
+    })
+
+    return new NextResponse(null, { status: 204 })
+  } catch (error) {
+    console.error('[DELETE /api/tasks/[taskId]]', error)
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'サーバーエラーが発生しました' } },
+      { status: 500 },
+    )
+  }
+}
