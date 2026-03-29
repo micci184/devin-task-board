@@ -3,6 +3,7 @@
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -69,7 +70,7 @@ export const StatusBarChart = ({ data }: Props) => {
             />
             <Bar dataKey="count" name="タスク数" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
-                <rect key={index} fill={entry.fill} />
+                <Cell key={index} fill={entry.fill} />
               ))}
             </Bar>
           </BarChart>
