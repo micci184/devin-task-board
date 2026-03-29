@@ -6,8 +6,14 @@ import { createTaskSchema } from '@/lib/validations/task'
 
 import type { NextRequest } from 'next/server'
 
+const VALID_SORT_BY = ['taskNumber', 'title', 'status', 'priority', 'dueDate', 'createdAt'] as const
+type SortByField = (typeof VALID_SORT_BY)[number]
+
+const VALID_SORT_ORDER = ['asc', 'desc'] as const
+type SortOrder = (typeof VALID_SORT_ORDER)[number]
+
 export const GET = async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) => {
   try {
@@ -31,17 +37,42 @@ export const GET = async (
       )
     }
 
+    const url = new URL(request.url)
+    const pageParam = url.searchParams.get('page')
+    const perPageParam = url.searchParams.get('perPage')
+    const sortByParam = url.searchParams.get('sortBy')
+    const sortOrderParam = url.searchParams.get('sortOrder')
+
+    const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
+    const perPage = Math.min(100, Math.max(1, parseInt(perPageParam ?? '20', 10) || 20))
+    const sortBy: SortByField = VALID_SORT_BY.includes(sortByParam as SortByField)
+      ? (sortByParam as SortByField)
+      : 'createdAt'
+    const sortOrder: SortOrder = VALID_SORT_ORDER.includes(sortOrderParam as SortOrder)
+      ? (sortOrderParam as SortOrder)
+      : 'desc'
+
+    const where = { projectId }
+
+    const total = await prisma.task.count({ where })
+    const totalPages = Math.ceil(total / perPage)
+
     const tasks = await prisma.task.findMany({
-      where: { projectId },
+      where,
       include: {
         assignee: { select: { id: true, name: true, avatarUrl: true } },
         reporter: { select: { id: true, name: true, avatarUrl: true } },
         taskCategories: { include: { category: true } },
       },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      orderBy: { [sortBy]: sortOrder },
+      skip: (page - 1) * perPage,
+      take: perPage,
     })
 
-    return NextResponse.json({ data: tasks })
+    return NextResponse.json({
+      data: tasks,
+      pagination: { page, perPage, total, totalPages },
+    })
   } catch (error) {
     console.error('[GET /api/projects/[id]/tasks]', error)
     return NextResponse.json(

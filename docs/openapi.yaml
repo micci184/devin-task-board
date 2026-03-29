@@ -1647,15 +1647,14 @@ paths:
                 type: object
                 required:
                   - data
+                  - pagination
                 properties:
                   data:
                     type: array
                     items:
                       $ref: "#/components/schemas/TaskWithRelations"
                   pagination:
-                    allOf:
-                      - $ref: "#/components/schemas/Pagination"
-                    description: "※ 現在の実装では未返却。ページネーション実装後に required へ昇格予定"
+                    $ref: "#/components/schemas/Pagination"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
