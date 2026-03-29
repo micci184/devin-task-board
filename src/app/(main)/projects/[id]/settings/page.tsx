@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { ProjectSettingsForm } from '@/components/projects/ProjectSettingsForm'
+import { ProjectDeleteSection } from '@/components/projects/ProjectDeleteSection'
 import { InviteMemberForm } from '@/components/members/InviteMemberForm'
 import { MemberList } from '@/components/members/MemberList'
 
@@ -46,6 +48,11 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
     redirect('/projects')
   }
 
+  if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
+    redirect('/projects')
+  }
+
+  const isOwner = project.ownerId === session.user.id
   const canInvite = membership.role === 'OWNER' || membership.role === 'ADMIN'
 
   const serializedMembers = members.map((m) => ({
@@ -64,13 +71,19 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
   }))
 
   return (
-    <div>
+    <div className="mx-auto max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-        <p className="text-sm text-foreground/60">プロジェクト設定</p>
+        <h1 className="text-2xl font-bold text-foreground">プロジェクト設定</h1>
+        <p className="text-sm text-foreground/60">{project.name} の設定</p>
       </div>
 
       <div className="space-y-8">
+        <ProjectSettingsForm
+          projectId={project.id}
+          defaultName={project.name}
+          defaultDescription={project.description ?? ''}
+        />
+
         <section>
           <h2 className="mb-4 text-lg font-semibold text-foreground">
             メンバー（{members.length}人）
@@ -85,6 +98,8 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
 
           <MemberList members={serializedMembers} />
         </section>
+
+        {isOwner && <ProjectDeleteSection projectId={project.id} projectName={project.name} />}
       </div>
     </div>
   )
