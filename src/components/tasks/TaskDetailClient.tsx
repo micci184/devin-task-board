@@ -947,6 +947,171 @@ const DeleteConfirmDialog = ({
   )
 }
 
+interface CategoryItem {
+  id: string
+  name: string
+  color: string
+}
+
+const InlineSelectCategories = ({
+  taskCategories,
+  taskId,
+  projectId,
+  canEdit,
+  onUpdated,
+}: {
+  taskCategories: TaskCategory[]
+  taskId: string
+  projectId: string
+  canEdit: boolean
+  onUpdated: (task: TaskData) => void
+}) => {
+  const [open, setOpen] = useState(false)
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [optimisticIds, setOptimisticIds] = useState<string[] | null>(null)
+  const pendingRequests = useRef(0)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/categories`)
+        if (res.ok) {
+          const json = await res.json()
+          setCategories(json.data)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchCategories()
+  }, [open, projectId])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open])
+
+  const selectedIds = optimisticIds ?? taskCategories.map((tc) => tc.category.id)
+
+  useEffect(() => {
+    if (pendingRequests.current === 0) {
+      setOptimisticIds(null)
+    }
+  }, [taskCategories])
+
+  const handleToggle = async (categoryId: string) => {
+    const currentIds = optimisticIds ?? taskCategories.map((tc) => tc.category.id)
+    const newIds = currentIds.includes(categoryId)
+      ? currentIds.filter((id) => id !== categoryId)
+      : [...currentIds, categoryId]
+    setOptimisticIds(newIds)
+    pendingRequests.current += 1
+    try {
+      const updated = await updateTask(taskId, { categoryIds: newIds })
+      pendingRequests.current -= 1
+      if (pendingRequests.current === 0) {
+        setOptimisticIds(null)
+      }
+      onUpdated(updated)
+      toast.success('カテゴリを更新しました')
+    } catch (error) {
+      pendingRequests.current -= 1
+      if (pendingRequests.current === 0) {
+        setOptimisticIds(null)
+      }
+      toast.error(error instanceof Error ? error.message : 'カテゴリの更新に失敗しました')
+    }
+  }
+
+  if (!canEdit) {
+    return taskCategories.length > 0 ? (
+      <div className="mt-2 flex flex-wrap gap-1">
+        {taskCategories.map(({ category }) => (
+          <span
+            key={category.id}
+            className="rounded-full px-2 py-0.5 text-xs font-medium"
+            style={{
+              backgroundColor: `color-mix(in oklch, ${category.color} 15%, transparent)`,
+              color: category.color,
+            }}
+          >
+            {category.name}
+          </span>
+        ))}
+      </div>
+    ) : (
+      <p className="mt-2 text-sm text-foreground/40">未設定</p>
+    )
+  }
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="mt-2 flex w-full items-center gap-2 rounded-md p-1 transition-colors hover:bg-foreground/5"
+      >
+        {taskCategories.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {taskCategories.map(({ category }) => (
+              <span
+                key={category.id}
+                className="rounded-full px-2 py-0.5 text-xs font-medium"
+                style={{
+                  backgroundColor: `color-mix(in oklch, ${category.color} 15%, transparent)`,
+                  color: category.color,
+                }}
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-sm text-foreground/40">未設定</span>
+        )}
+        <ChevronDown size={12} className="ml-auto shrink-0 text-foreground/40" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-md border border-foreground/10 bg-background py-1 shadow-lg">
+          {categories.length === 0 ? (
+            <p className="px-3 py-2 text-xs text-foreground/40">カテゴリがありません</p>
+          ) : (
+            categories.map((cat) => {
+              const isSelected = selectedIds.includes(cat.id)
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleToggle(cat.id)}
+                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-foreground/5 ${
+                    isSelected ? 'font-medium' : ''
+                  }`}
+                >
+                  <span
+                    className="rounded-full px-2 py-0.5"
+                    style={{
+                      backgroundColor: `color-mix(in oklch, ${cat.color} 15%, transparent)`,
+                      color: cat.color,
+                    }}
+                  >
+                    {cat.name}
+                  </span>
+                  {isSelected && <Check size={12} className="ml-auto text-primary" />}
+                </button>
+              )
+            })
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // --- Main Component ---
 
 export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, currentUserId }: TaskDetailClientProps) => {
@@ -1176,28 +1341,19 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           </div>
 
           {/* Categories */}
-          {task.taskCategories.length > 0 && (
-            <div className="rounded-lg border border-foreground/10 bg-background p-4">
-              <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
-                <Tag size={14} />
-                <span>カテゴリ</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {task.taskCategories.map(({ category }) => (
-                  <span
-                    key={category.id}
-                    className="rounded-full px-2 py-0.5 text-xs font-medium"
-                    style={{
-                      backgroundColor: `color-mix(in oklch, ${category.color} 15%, transparent)`,
-                      color: category.color,
-                    }}
-                  >
-                    {category.name}
-                  </span>
-                ))}
-              </div>
+          <div className="rounded-lg border border-foreground/10 bg-background p-4">
+            <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
+              <Tag size={14} />
+              <span>カテゴリ</span>
             </div>
-          )}
+            <InlineSelectCategories
+              taskCategories={task.taskCategories}
+              taskId={task.id}
+              projectId={task.projectId}
+              canEdit={canEdit}
+              onUpdated={handleUpdated}
+            />
+          </div>
 
           {/* Status (sidebar) */}
           <div className="rounded-lg border border-foreground/10 bg-background p-4">

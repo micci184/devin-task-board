@@ -7,6 +7,14 @@ import { format } from 'date-fns'
 
 import type { Priority } from '@prisma/client'
 
+interface TaskCategory {
+  category: {
+    id: string
+    name: string
+    color: string
+  }
+}
+
 interface TaskCardProps {
   task: {
     id: string
@@ -19,6 +27,7 @@ interface TaskCardProps {
       name: string
       avatarUrl: string | null
     } | null
+    taskCategories?: TaskCategory[]
   }
   projectKey: string
 }
@@ -54,6 +63,23 @@ export const TaskCard = ({ task, projectKey }: TaskCardProps) => {
       </div>
 
       <p className="text-sm font-medium text-foreground">{task.title}</p>
+
+      {task.taskCategories && task.taskCategories.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {task.taskCategories.map((tc) => (
+            <span
+              key={tc.category.id}
+              className="rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+              style={{
+                backgroundColor: `color-mix(in oklch, ${tc.category.color} 15%, transparent)`,
+                color: tc.category.color,
+              }}
+            >
+              {tc.category.name}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-3 flex items-center justify-between">
         {dueDate && (

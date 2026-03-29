@@ -42,6 +42,7 @@ export const GET = async (
     const perPageParam = url.searchParams.get('perPage')
     const sortByParam = url.searchParams.get('sortBy')
     const sortOrderParam = url.searchParams.get('sortOrder')
+    const categoryIdsParam = url.searchParams.get('categoryIds')
 
     const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
     const perPage = Math.min(100, Math.max(1, parseInt(perPageParam ?? '20', 10) || 20))
@@ -52,7 +53,16 @@ export const GET = async (
       ? (sortOrderParam as SortOrder)
       : 'desc'
 
-    const where = { projectId }
+    const categoryIds = categoryIdsParam
+      ? categoryIdsParam.split(',').filter(Boolean)
+      : []
+
+    const where: Record<string, unknown> = { projectId }
+    if (categoryIds.length > 0) {
+      where.taskCategories = {
+        some: { categoryId: { in: categoryIds } },
+      }
+    }
 
     const total = await prisma.task.count({ where })
     const totalPages = Math.ceil(total / perPage)

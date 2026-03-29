@@ -12,6 +12,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
+import { Filter } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { KanbanColumn } from '@/components/board/KanbanColumn'
@@ -19,6 +20,14 @@ import { TaskCard } from '@/components/tasks/TaskCard'
 
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core'
 import type { Priority, TaskStatus } from '@prisma/client'
+
+interface TaskCategory {
+  category: {
+    id: string
+    name: string
+    color: string
+  }
+}
 
 interface Task {
   id: string
@@ -33,12 +42,20 @@ interface Task {
     name: string
     avatarUrl: string | null
   } | null
+  taskCategories?: TaskCategory[]
+}
+
+interface CategoryItem {
+  id: string
+  name: string
+  color: string
 }
 
 interface KanbanBoardProps {
   tasks: Task[]
   projectId: string
   projectKey: string
+  categories: CategoryItem[]
 }
 
 const columns: { status: TaskStatus; label: string }[] = [
@@ -51,10 +68,12 @@ const columns: { status: TaskStatus; label: string }[] = [
 
 const SORT_ORDER_GAP = 1000
 
-export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) => {
+export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: KanbanBoardProps) => {
   const router = useRouter()
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
+  const [showCategoryFilter, setShowCategoryFilter] = useState(false)
   const dragOriginalStatusRef = useRef<TaskStatus | null>(null)
 
   useEffect(() => {
@@ -328,8 +347,73 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
     setLocalTasks(tasks)
   }
 
+  const toggleCategoryFilter = (categoryId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId],
+    )
+  }
+
+  const filteredTasks = selectedCategoryIds.length > 0
+    ? localTasks.filter((t) =>
+        t.taskCategories?.some((tc) => selectedCategoryIds.includes(tc.category.id)),
+      )
+    : localTasks
+
   return (
     <>
+      {categories.length > 0 && (
+        <div className="mb-4 flex items-center gap-2">
+          <button
+            onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+              selectedCategoryIds.length > 0
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-foreground/20 text-foreground/60 hover:bg-foreground/5'
+            }`}
+          >
+            <Filter size={14} />
+            カテゴリ
+            {selectedCategoryIds.length > 0 && (
+              <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
+                {selectedCategoryIds.length}
+              </span>
+            )}
+          </button>
+          {showCategoryFilter && (
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map((cat) => {
+                const isSelected = selectedCategoryIds.includes(cat.id)
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategoryFilter(cat.id)}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-opacity ${
+                      isSelected ? 'opacity-100' : 'opacity-50 hover:opacity-75'
+                    }`}
+                    style={{
+                      backgroundColor: `color-mix(in oklch, ${cat.color} 15%, transparent)`,
+                      color: cat.color,
+                    }}
+                  >
+                    {cat.name}
+                  </button>
+                )
+              })}
+              {selectedCategoryIds.length > 0 && (
+                <button
+                  onClick={() => setSelectedCategoryIds([])}
+                  className="rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground/50 hover:text-foreground/80"
+                >
+                  クリア
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -344,7 +428,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
               key={col.status}
               status={col.status}
               label={col.label}
-              tasks={getTasksByStatus(col.status)}
+              tasks={filteredTasks.filter((t) => t.status === col.status).sort((a, b) => a.sortOrder - b.sortOrder)}
               projectKey={projectKey}
               onQuickCreate={handleQuickCreate}
               activeTaskId={activeTaskId}

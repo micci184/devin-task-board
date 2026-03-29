@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { X } from 'lucide-react'
@@ -9,6 +9,12 @@ import { createTaskSchema } from '@/lib/validations/task'
 
 import type { CreateTaskInput } from '@/lib/validations/task'
 import type { TaskStatus } from '@prisma/client'
+
+interface CategoryItem {
+  id: string
+  name: string
+  color: string
+}
 
 interface TaskCreateModalProps {
   projectId: string
@@ -25,6 +31,31 @@ export const TaskCreateModal = ({
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof CreateTaskInput, string>>>({})
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/categories`)
+        if (res.ok) {
+          const json = await res.json()
+          setCategories(json.data)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchCategories()
+  }, [projectId])
+
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId],
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -38,6 +69,7 @@ export const TaskCreateModal = ({
       priority: formData.get('priority') as string,
       status: defaultStatus,
       dueDate: (formData.get('dueDate') as string) || undefined,
+      categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
     }
 
     const parsed = createTaskSchema.safeParse(data)
@@ -159,6 +191,38 @@ export const TaskCreateModal = ({
               />
             </div>
           </div>
+
+          {categories.length > 0 && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground">
+                カテゴリ
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {categories.map((cat) => {
+                  const isSelected = selectedCategoryIds.includes(cat.id)
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => toggleCategory(cat.id)}
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
+                        isSelected
+                          ? 'ring-2 ring-offset-1'
+                          : 'opacity-60 hover:opacity-80'
+                      }`}
+                      style={{
+                        backgroundColor: `color-mix(in oklch, ${cat.color} 15%, transparent)`,
+                        color: cat.color,
+                        ...(isSelected ? { '--tw-ring-color': cat.color } as React.CSSProperties : {}),
+                      }}
+                    >
+                      {cat.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <button
