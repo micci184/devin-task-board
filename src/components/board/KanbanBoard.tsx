@@ -177,20 +177,30 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
     setActiveTaskId(null)
 
     const { active, over } = event
-    if (!over) return
+    if (!over) {
+      dragOriginalStatusRef.current = null
+      setLocalTasks(tasks)
+      return
+    }
 
     const activeId = active.id as string
     const overId = over.id as string
 
-    if (activeId === overId) return
-
     const task = localTasks.find((t) => t.id === activeId)
-    if (!task) return
+    if (!task) {
+      dragOriginalStatusRef.current = null
+      return
+    }
 
     const validStatuses = columns.map((c) => c.status)
     const originalStatus = dragOriginalStatusRef.current
     const currentStatus = originalStatus ?? task.status
     dragOriginalStatusRef.current = null
+
+    if (activeId === overId && currentStatus === task.status) {
+      setLocalTasks(tasks)
+      return
+    }
 
     const isOverColumn = validStatuses.includes(overId as TaskStatus)
     const overTask = !isOverColumn ? localTasks.find((t) => t.id === overId) : null
@@ -294,7 +304,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey }: KanbanBoardProps) 
 
         router.refresh()
       } catch (error) {
-        setLocalTasks(previousTasks)
+        setLocalTasks(tasks)
         toast.error(
           error instanceof Error ? error.message : 'ステータスの更新に失敗しました',
         )
