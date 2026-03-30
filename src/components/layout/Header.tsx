@@ -18,6 +18,7 @@ import {
   Settings,
 } from "lucide-react";
 import { GlobalSearch } from "@/components/layout/GlobalSearch";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const mobileNavItems = [
   { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
@@ -76,13 +77,7 @@ export const Header = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Link
-          href="/notifications"
-          className="relative flex h-8 w-8 items-center justify-center rounded-md text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
-          aria-label="通知"
-        >
-          <Bell size={18} />
-        </Link>
+        <NotificationBell />
 
         <div ref={themeMenuRef} className="relative">
           <button
