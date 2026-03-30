@@ -17,6 +17,7 @@ import {
   MailOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations, useLocale } from 'next-intl'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { NOTIFICATION_READ_CHANGED_EVENT } from '@/components/notifications/NotificationBell'
@@ -58,6 +59,9 @@ export const NotificationList = ({
   initialPagination,
 }: NotificationListProps) => {
   const router = useRouter()
+  const t = useTranslations('notifications')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
   const [notifications, setNotifications] = useState(initialNotifications)
   const [pagination, setPagination] = useState(initialPagination)
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
@@ -73,7 +77,7 @@ export const NotificationList = ({
 
       const res = await fetch(`/api/notifications?${params.toString()}`)
       if (!res.ok) {
-        toast.error('通知の取得に失敗しました')
+        toast.error(t('fetchError'))
         return
       }
 
@@ -81,7 +85,7 @@ export const NotificationList = ({
       setNotifications(json.data)
       setPagination(json.pagination)
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     } finally {
       setIsLoading(false)
     }
@@ -104,7 +108,7 @@ export const NotificationList = ({
         body: JSON.stringify({ isRead }),
       })
       if (!res.ok) {
-        toast.error('既読の更新に失敗しました')
+        toast.error(t('readUpdateError'))
         return
       }
 
@@ -113,7 +117,7 @@ export const NotificationList = ({
       )
       dispatchReadChanged()
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     }
   }
 
@@ -122,15 +126,15 @@ export const NotificationList = ({
     try {
       const res = await fetch('/api/notifications/read-all', { method: 'PATCH' })
       if (!res.ok) {
-        toast.error('一括既読に失敗しました')
+        toast.error(t('markAllError'))
         return
       }
 
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
       dispatchReadChanged()
-      toast.success('すべての通知を既読にしました')
+      toast.success(t('markAllSuccess'))
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     } finally {
       setIsMarkingAll(false)
     }
@@ -165,7 +169,7 @@ export const NotificationList = ({
                   : 'text-foreground/60 hover:bg-foreground/5 hover:text-foreground'
               }`}
             >
-              {f === 'all' ? 'すべて' : f === 'unread' ? '未読' : '既読'}
+              {f === 'all' ? t('all') : f === 'unread' ? t('unread') : t('read')}
             </button>
           ))}
         </div>
@@ -177,7 +181,7 @@ export const NotificationList = ({
             className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
           >
             <CheckCheck size={14} />
-            <span>{isMarkingAll ? '処理中...' : 'すべて既読にする'}</span>
+            <span>{isMarkingAll ? t('processing') : t('markAllRead')}</span>
           </button>
         )}
       </div>
@@ -188,7 +192,7 @@ export const NotificationList = ({
         <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-foreground/10 py-12">
           <Bell size={32} className="text-foreground/30" />
           <p className="text-sm text-foreground/60">
-            {filter === 'unread' ? '未読の通知はありません' : filter === 'read' ? '既読の通知はありません' : '通知はありません'}
+            {filter === 'unread' ? t('noUnread') : filter === 'read' ? t('noRead') : t('noNotifications')}
           </p>
         </div>
       ) : (
@@ -232,7 +236,7 @@ export const NotificationList = ({
                       {notification.message}
                     </p>
                     <p className="mt-1 text-xs text-foreground/40">
-                      {format(new Date(notification.createdAt), 'yyyy年M月d日 HH:mm', { locale: ja })}
+                      {format(new Date(notification.createdAt), locale === 'ja' ? 'yyyy年M月d日 HH:mm' : 'MMM d, yyyy HH:mm', { locale: locale === 'ja' ? ja : undefined })}
                     </p>
                   </div>
                 </button>
@@ -242,11 +246,11 @@ export const NotificationList = ({
                     handleToggleRead(notification.id, !notification.isRead)
                   }}
                   className="mt-1 flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs text-foreground/50 transition-colors hover:bg-foreground/5 hover:text-foreground"
-                  title={notification.isRead ? '未読にする' : '既読にする'}
+                  title={notification.isRead ? t('markAsUnread') : t('markAsRead')}
                 >
                   {notification.isRead ? <Mail size={14} /> : <MailOpen size={14} />}
                   <span className="hidden sm:inline">
-                    {notification.isRead ? '未読にする' : '既読にする'}
+                    {notification.isRead ? t('markAsUnread') : t('markAsRead')}
                   </span>
                 </button>
               </div>
@@ -262,7 +266,7 @@ export const NotificationList = ({
             disabled={pagination.page <= 1}
             className="rounded-md px-3 py-1.5 text-sm text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
           >
-            前へ
+            {tCommon('previous')}
           </button>
           <span className="text-sm text-foreground/60">
             {pagination.page} / {pagination.totalPages}
@@ -272,7 +276,7 @@ export const NotificationList = ({
             disabled={pagination.page >= pagination.totalPages}
             className="rounded-md px-3 py-1.5 text-sm text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
           >
-            次へ
+            {tCommon('next')}
           </button>
         </div>
       )}

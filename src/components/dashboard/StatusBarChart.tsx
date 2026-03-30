@@ -10,19 +10,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import { useTranslations } from 'next-intl'
 
 type StatusChartItem = {
   status: string
   count: number
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  BACKLOG: 'バックログ',
-  TODO: 'TODO',
-  IN_PROGRESS: '進行中',
-  IN_REVIEW: 'レビュー中',
-  DONE: '完了',
-}
 
 const STATUS_COLORS: Record<string, string> = {
   BACKLOG: '#94a3b8',
@@ -37,15 +31,17 @@ type Props = {
 }
 
 export const StatusBarChart = ({ data }: Props) => {
+  const t = useTranslations('dashboardStatus')
+  const tDashboard = useTranslations('dashboard')
   const chartData = data.map((item) => ({
-    name: STATUS_LABELS[item.status] ?? item.status,
+    name: t(item.status as 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE'),
     count: item.count,
     fill: STATUS_COLORS[item.status] ?? '#94a3b8',
   }))
 
   return (
     <div className="rounded-lg border border-foreground/10 bg-background p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">ステータス別タスク数</h3>
+      <h3 className="mb-4 text-sm font-semibold text-foreground">{tDashboard('statusChart')}</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
@@ -71,7 +67,7 @@ export const StatusBarChart = ({ data }: Props) => {
                 color: 'var(--foreground)',
               }}
             />
-            <Bar dataKey="count" name="タスク数" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="count" name={tDashboard('taskCount')} radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={index} fill={entry.fill} />
               ))}

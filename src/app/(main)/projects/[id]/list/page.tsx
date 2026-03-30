@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { getTranslations } from 'next-intl/server'
+
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { TaskListView } from '@/components/tasks/TaskListView'
@@ -30,7 +32,7 @@ const ListPage = async ({ params }: ListPageProps) => {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-          <p className="text-sm text-foreground/60">リストビュー</p>
+          <p className="text-sm text-foreground/60">{(await getTranslations('projects'))('listView')}</p>
         </div>
       </div>
 

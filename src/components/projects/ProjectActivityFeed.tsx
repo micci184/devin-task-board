@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { Activity, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslations, useLocale } from 'next-intl'
 
 import type { ActivityAction } from '@prisma/client'
 
@@ -33,78 +34,68 @@ interface Pagination {
   totalPages: number
 }
 
-const ACTION_LABELS: Record<ActivityAction, string> = {
-  CREATED: '作成',
-  UPDATED: '更新',
-  DELETED: '削除',
-  STATUS_CHANGED: 'ステータス変更',
-  ASSIGNED: 'アサイン',
-  COMMENTED: 'コメント',
-  ATTACHED: 'ファイル添付',
-}
 
-const ENTITY_LABELS: Record<string, string> = {
-  task: 'タスク',
-  comment: 'コメント',
-  project: 'プロジェクト',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  BACKLOG: 'Backlog',
-  TODO: 'Todo',
-  IN_PROGRESS: 'In Progress',
-  IN_REVIEW: 'In Review',
-  DONE: 'Done',
-}
-
-const PRIORITY_LABELS: Record<string, string> = {
-  URGENT: '緊急',
-  HIGH: '高',
-  MEDIUM: '中',
-  LOW: '低',
-  NONE: 'なし',
-}
-
-const FIELD_LABELS: Record<string, string> = {
-  title: 'タイトル',
-  description: '説明',
-  status: 'ステータス',
-  priority: '優先度',
-  assigneeId: '担当者',
-  dueDate: '期限',
-  estimatedHours: '見積もり工数',
-  actualHours: '実績工数',
-}
-
-const formatFieldValue = (field: string, value: unknown): string => {
-  if (value === null || value === undefined) return '未設定'
-
-  if (field === 'status') return STATUS_LABELS[String(value)] ?? String(value)
-  if (field === 'priority') return PRIORITY_LABELS[String(value)] ?? String(value)
-  if (field === 'dueDate') {
-    const date = new Date(String(value))
-    if (isNaN(date.getTime())) return String(value)
-    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
-  }
-  if (field === 'estimatedHours' || field === 'actualHours') {
-    return `${value}h`
-  }
-  if (field === 'assigneeId') return String(value) || '未割り当て'
-  if (field === 'description') {
-    const str = String(value)
-    return str.length > 50 ? `${str.substring(0, 50)}...` : str
-  }
-  return String(value)
-}
-
-const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
+const ActivityDetail = ({ activity, t, tStatus, tPriority, tCommon }: { activity: ActivityItem; t: ReturnType<typeof useTranslations<'activity'>>; tStatus: ReturnType<typeof useTranslations<'dashboardStatus'>>; tPriority: ReturnType<typeof useTranslations<'priority'>>; tCommon: ReturnType<typeof useTranslations<'common'>> }) => {
   const { action, oldValue, newValue } = activity
+
+  const FIELD_LABELS: Record<string, string> = {
+    title: t('fields.title'),
+    description: t('fields.description'),
+    status: t('fields.status'),
+    priority: t('fields.priority'),
+    assigneeId: t('fields.assigneeId'),
+    dueDate: t('fields.dueDate'),
+    estimatedHours: t('fields.estimatedHours'),
+    actualHours: t('fields.actualHours'),
+  }
+
+  const getStatusLabel = (status: string) => {
+    try {
+      return tStatus(status as 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE')
+    } catch {
+      return status
+    }
+  }
+
+  const getPriorityLabel = (priority: string) => {
+    try {
+      return tPriority(priority as 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE')
+    } catch {
+      return priority
+    }
+  }
+
+  const getEntityLabel = (entityType: string) => {
+    try {
+      return t(`entities.${entityType}` as 'entities.task' | 'entities.comment' | 'entities.project')
+    } catch {
+      return entityType
+    }
+  }
+
+  const formatFieldValue = (field: string, value: unknown): string => {
+    if (value === null || value === undefined) return tCommon('unset')
+    if (field === 'status') return getStatusLabel(String(value))
+    if (field === 'priority') return getPriorityLabel(String(value))
+    if (field === 'dueDate') {
+      const date = new Date(String(value))
+      if (isNaN(date.getTime())) return String(value)
+      return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+    }
+    if (field === 'estimatedHours' || field === 'actualHours') return `${value}h`
+    if (field === 'assigneeId') return String(value) || tCommon('unassigned')
+    if (field === 'description') {
+      const str = String(value)
+      return str.length > 50 ? `${str.substring(0, 50)}...` : str
+    }
+    return String(value)
+  }
 
   if (action === 'CREATED') {
     const taskKey = newValue?.taskKey as string | undefined
     return (
       <span className="text-foreground/60">
-        {taskKey ? `${taskKey} を作成しました` : `${ENTITY_LABELS[activity.entityType] ?? activity.entityType}を作成しました`}
+        {taskKey ? t('detail.createdTask', { key: taskKey }) : t('detail.createdTaskGeneric')}
       </span>
     )
   }
@@ -113,7 +104,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const taskKey = oldValue?.taskKey as string | undefined
     return (
       <span className="text-foreground/60">
-        {taskKey ? `${taskKey} を削除しました` : `${ENTITY_LABELS[activity.entityType] ?? activity.entityType}を削除しました`}
+        {taskKey ? t('detail.deletedTask', { key: taskKey }) : t('detail.deletedTaskGeneric')}
       </span>
     )
   }
@@ -123,10 +114,10 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const newStatus = newValue?.status as string | undefined
     return (
       <span className="text-foreground/60">
-        ステータスを変更:{' '}
-        <span className="font-medium text-foreground">{STATUS_LABELS[oldStatus ?? ''] ?? oldStatus}</span>
+        {t('detail.statusChanged')}{' '}
+        <span className="font-medium text-foreground">{oldStatus ? getStatusLabel(oldStatus) : ''}</span>
         {' → '}
-        <span className="font-medium text-foreground">{STATUS_LABELS[newStatus ?? ''] ?? newStatus}</span>
+        <span className="font-medium text-foreground">{newStatus ? getStatusLabel(newStatus) : ''}</span>
       </span>
     )
   }
@@ -135,7 +126,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const newAssigneeId = newValue?.assigneeId as string | null | undefined
     return (
       <span className="text-foreground/60">
-        {newAssigneeId ? '担当者を変更しました' : '担当者を解除しました'}
+        {newAssigneeId ? t('detail.assigneeChanged') : t('detail.assigneeRemoved')}
       </span>
     )
   }
@@ -144,7 +135,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const content = newValue?.content as string | undefined
     return (
       <span className="text-foreground/60">
-        コメントを投稿しました
+        {t('detail.commented')}
         {content && (
           <span className="ml-1 text-foreground/40">
             — {content.length > 80 ? `${content.substring(0, 80)}...` : content}
@@ -158,7 +149,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const fileName = newValue?.fileName as string | undefined
     return (
       <span className="text-foreground/60">
-        ファイルを添付しました
+        {t('detail.attached')}
         {fileName && <span className="ml-1 font-medium text-foreground">{fileName}</span>}
       </span>
     )
@@ -174,7 +165,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     }
 
     if (changes.length === 0) {
-      return <span className="text-foreground/60">タスクを更新しました</span>
+      return <span className="text-foreground/60">{t('detail.updatedTask')}</span>
     }
 
     return (
@@ -182,7 +173,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
         {changes.map(({ field, oldVal, newVal }) => (
           <div key={field} className="text-foreground/60">
             <span className="font-medium text-foreground/80">{FIELD_LABELS[field] ?? field}</span>
-            を変更:{' '}
+            {t('detail.fieldChanged')}{' '}
             <span className="font-medium text-foreground">{formatFieldValue(field, oldVal)}</span>
             {' → '}
             <span className="font-medium text-foreground">{formatFieldValue(field, newVal)}</span>
@@ -192,9 +183,10 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     )
   }
 
+  const actionLabel = t(`actions.${action}` as 'actions.CREATED' | 'actions.UPDATED' | 'actions.DELETED' | 'actions.STATUS_CHANGED' | 'actions.ASSIGNED' | 'actions.COMMENTED' | 'actions.ATTACHED')
   return (
     <span className="text-foreground/60">
-      {ENTITY_LABELS[activity.entityType] ?? activity.entityType}を{ACTION_LABELS[action]}しました
+      {t('detail.actionDone', { action: actionLabel })}
     </span>
   )
 }
@@ -204,6 +196,11 @@ interface ProjectActivityFeedProps {
 }
 
 export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => {
+  const t = useTranslations('activity')
+  const tStatus = useTranslations('dashboardStatus')
+  const tPriority = useTranslations('priority')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [pagination, setPagination] = useState<Pagination | null>(null)
   const [loading, setLoading] = useState(true)
@@ -217,13 +214,13 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
       const res = await fetch(`/api/projects/${projectId}/activities?page=${page}&perPage=20`)
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error?.message ?? 'アクティビティの取得に失敗しました')
+        throw new Error(json.error?.message ?? t('fetchError'))
       }
       const json = await res.json()
       setActivities(json.data)
       setPagination(json.pagination)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'アクティビティの取得に失敗しました')
+      setError(err instanceof Error ? err.message : t('fetchError'))
     } finally {
       setLoading(false)
     }
@@ -261,7 +258,7 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Activity size={48} className="mb-3 text-foreground/20" />
-        <p className="text-sm text-foreground/40">アクティビティがありません</p>
+        <p className="text-sm text-foreground/40">{t('empty')}</p>
       </div>
     )
   }
@@ -287,12 +284,12 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
                 <span className="font-medium text-foreground">{activity.user.name}</span>
               </div>
               <div className="mt-0.5 text-sm">
-                <ActivityDetail activity={activity} />
+                <ActivityDetail activity={activity} t={t} tStatus={tStatus} tPriority={tPriority} tCommon={tCommon} />
               </div>
               <p className="mt-1 text-xs text-foreground/40">
                 {formatDistanceToNow(new Date(activity.createdAt), {
                   addSuffix: true,
-                  locale: ja,
+                  locale: locale === 'ja' ? ja : undefined,
                 })}
               </p>
             </div>
@@ -303,15 +300,14 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
       {pagination && pagination.totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between border-t border-foreground/10 pt-4">
           <p className="text-xs text-foreground/40">
-            {pagination.total} 件中 {(pagination.page - 1) * pagination.perPage + 1}–
-            {Math.min(pagination.page * pagination.perPage, pagination.total)} 件を表示
+            {t('paginationInfo', { total: pagination.total, from: (pagination.page - 1) * pagination.perPage + 1, to: Math.min(pagination.page * pagination.perPage, pagination.total) })}
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrevPage}
               disabled={currentPage <= 1 || loading}
               className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/10 text-foreground/60 transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="前のページ"
+              aria-label={t('prevPage')}
             >
               <ChevronLeft size={16} />
             </button>
@@ -322,7 +318,7 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
               onClick={handleNextPage}
               disabled={!pagination || currentPage >= pagination.totalPages || loading}
               className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/10 text-foreground/60 transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="次のページ"
+              aria-label={t('nextPage')}
             >
               <ChevronRight size={16} />
             </button>

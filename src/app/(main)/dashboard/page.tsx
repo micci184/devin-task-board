@@ -5,6 +5,7 @@ import {
   Clock,
   AlertTriangle,
 } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -20,6 +21,8 @@ const DashboardPage = async () => {
   if (!userId) {
     return null
   }
+
+  const t = await getTranslations('dashboard')
 
   // ユーザーが参加しているプロジェクトを取得
   const memberships = await prisma.projectMember.findMany({
@@ -161,34 +164,34 @@ const DashboardPage = async () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">ダッシュボード</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
         <p className="mt-1 text-sm text-foreground/60">
-          ようこそ、{session?.user?.name ?? 'ユーザー'} さん
+          {t('welcome', { name: session?.user?.name ?? '' })}
         </p>
       </div>
 
       {/* サマリーカード */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="総タスク数"
+          title={t('totalTasks')}
           value={totalTasks}
           icon={ListTodo}
           color="oklch(0.55 0.12 250)"
         />
         <StatCard
-          title="完了"
+          title={t('completed')}
           value={completedTasks}
           icon={CheckCircle2}
           color="oklch(0.55 0.15 160)"
         />
         <StatCard
-          title="進行中"
+          title={t('inProgress')}
           value={inProgressTasks}
           icon={Clock}
           color="oklch(0.65 0.15 85)"
         />
         <StatCard
-          title="期限超過"
+          title={t('overdue')}
           value={overdueTasks}
           icon={AlertTriangle}
           color="oklch(0.55 0.22 27)"
@@ -204,8 +207,8 @@ const DashboardPage = async () => {
 
       {/* タスク一覧 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <MyTaskList tasks={serializedMyTasks} title="自分のタスク" />
-        <MyTaskList tasks={serializedUpcomingTasks} title="期限が近いタスク" />
+        <MyTaskList tasks={serializedMyTasks} title={t('myTasks')} />
+        <MyTaskList tasks={serializedUpcomingTasks} title={t('upcomingTasks')} />
       </div>
 
       {/* アクティビティフィード */}

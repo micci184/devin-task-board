@@ -22,6 +22,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 import { MarkdownPreview } from '@/components/tasks/MarkdownPreview'
@@ -85,26 +86,26 @@ interface TaskDetailClientProps {
   currentUserId: string
 }
 
-const statusConfig: Record<TaskStatus, { label: string; className: string }> = {
-  BACKLOG: { label: 'Backlog', className: 'bg-foreground/10 text-foreground/60' },
-  TODO: { label: 'Todo', className: 'bg-primary/10 text-primary' },
-  IN_PROGRESS: { label: 'In Progress', className: 'bg-warning/10 text-warning' },
-  IN_REVIEW: { label: 'In Review', className: 'bg-primary/10 text-primary' },
-  DONE: { label: 'Done', className: 'bg-success/10 text-success' },
+const statusClassNames: Record<TaskStatus, string> = {
+  BACKLOG: 'bg-foreground/10 text-foreground/60',
+  TODO: 'bg-primary/10 text-primary',
+  IN_PROGRESS: 'bg-warning/10 text-warning',
+  IN_REVIEW: 'bg-primary/10 text-primary',
+  DONE: 'bg-success/10 text-success',
 }
 
-const priorityConfig: Record<Priority, { label: string; className: string }> = {
-  URGENT: { label: '緊急', className: 'bg-danger/10 text-danger' },
-  HIGH: { label: '高', className: 'bg-warning/10 text-warning' },
-  MEDIUM: { label: '中', className: 'bg-primary/10 text-primary' },
-  LOW: { label: '低', className: 'bg-foreground/10 text-foreground/60' },
-  NONE: { label: 'なし', className: 'bg-foreground/5 text-foreground/40' },
+const priorityClassNames: Record<Priority, string> = {
+  URGENT: 'bg-danger/10 text-danger',
+  HIGH: 'bg-warning/10 text-warning',
+  MEDIUM: 'bg-primary/10 text-primary',
+  LOW: 'bg-foreground/10 text-foreground/60',
+  NONE: 'bg-foreground/5 text-foreground/40',
 }
 
 const statusOptions: TaskStatus[] = ['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']
 const priorityOptions: Priority[] = ['URGENT', 'HIGH', 'MEDIUM', 'LOW', 'NONE']
 
-const updateTask = async (taskId: string, data: Record<string, unknown>) => {
+const updateTask = async (taskId: string, data: Record<string, unknown>, errorMessage: string) => {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -113,7 +114,7 @@ const updateTask = async (taskId: string, data: Record<string, unknown>) => {
 
   if (!res.ok) {
     const json = await res.json()
-    throw new Error(json.error?.message ?? 'タスクの更新に失敗しました')
+    throw new Error(json.error?.message ?? errorMessage)
   }
 
   const json = await res.json()
@@ -133,6 +134,8 @@ const InlineEditTitle = ({
   canEdit: boolean
   onUpdated: (task: TaskData) => void
 }) => {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -152,12 +155,12 @@ const InlineEditTitle = ({
       return
     }
     try {
-      const updated = await updateTask(taskId, { title: trimmed })
+      const updated = await updateTask(taskId, { title: trimmed }, t('updateError'))
       onUpdated(updated)
-      toast.success('タイトルを更新しました')
+      toast.success(t('titleUpdateSuccess'))
       setEditing(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'タイトルの更新に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('fieldUpdateError', { field: t('titleLabel') }))
       setDraft(value)
       setEditing(false)
     }
@@ -195,7 +198,7 @@ const InlineEditTitle = ({
     <h1
       className="group cursor-pointer text-2xl font-bold text-foreground"
       onClick={() => setEditing(true)}
-      title="クリックして編集"
+      title={tCommon('clickToEdit')}
     >
       {value}
       <Pencil size={14} className="ml-2 inline opacity-0 transition-opacity group-hover:opacity-40" />
@@ -214,6 +217,8 @@ const InlineEditDescription = ({
   canEdit: boolean
   onUpdated: (task: TaskData) => void
 }) => {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value ?? '')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -233,12 +238,12 @@ const InlineEditDescription = ({
       return
     }
     try {
-      const updated = await updateTask(taskId, { description: newValue })
+      const updated = await updateTask(taskId, { description: newValue }, t('updateError'))
       onUpdated(updated)
-      toast.success('説明を更新しました')
+      toast.success(t('descriptionUpdateSuccess'))
       setEditing(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '説明の更新に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('fieldUpdateError', { field: t('descriptionLabel') }))
       setDraft(value ?? '')
       setEditing(false)
     }
@@ -253,7 +258,7 @@ const InlineEditDescription = ({
     return value ? (
       <MarkdownPreview content={value} />
     ) : (
-      <p className="text-sm text-foreground/40">説明はありません</p>
+      <p className="text-sm text-foreground/40">{t('noDescription')}</p>
     )
   }
 
@@ -267,7 +272,7 @@ const InlineEditDescription = ({
           className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
           rows={8}
           maxLength={1000}
-          placeholder="Markdown で記述できます"
+          placeholder={tCommon('markdownSupported')}
         />
         <div className="flex items-center gap-2">
           <button
@@ -275,14 +280,14 @@ const InlineEditDescription = ({
             className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Check size={12} />
-            保存
+            {tCommon('save')}
           </button>
           <button
             onClick={handleCancel}
             className="inline-flex items-center gap-1 rounded-md border border-foreground/20 px-3 py-1.5 text-xs font-medium text-foreground/60 hover:bg-foreground/5"
           >
             <X size={12} />
-            キャンセル
+            {tCommon('cancel')}
           </button>
         </div>
       </div>
@@ -293,7 +298,7 @@ const InlineEditDescription = ({
     <div
       className="group cursor-pointer"
       onClick={() => setEditing(true)}
-      title="クリックして編集"
+      title={tCommon('clickToEdit')}
     >
       {value ? (
         <div className="relative">
@@ -302,7 +307,7 @@ const InlineEditDescription = ({
         </div>
       ) : (
         <p className="text-sm text-foreground/40">
-          クリックして説明を追加
+          {t('clickToAddDescription')}
           <Pencil size={12} className="ml-1 inline opacity-0 transition-opacity group-hover:opacity-40" />
         </p>
       )}
@@ -313,7 +318,8 @@ const InlineEditDescription = ({
 const InlineSelect = <T extends string>({
   value,
   options,
-  config,
+  classNames,
+  getLabel,
   taskId,
   fieldName,
   canEdit,
@@ -322,13 +328,15 @@ const InlineSelect = <T extends string>({
 }: {
   value: T
   options: T[]
-  config: Record<T, { label: string; className: string }>
+  classNames: Record<T, string>
+  getLabel: (key: T) => string
   taskId: string
   fieldName: string
   canEdit: boolean
   onUpdated: (task: TaskData) => void
   label: string
 }) => {
+  const t = useTranslations('tasks')
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -349,20 +357,21 @@ const InlineSelect = <T extends string>({
     }
     setOpen(false)
     try {
-      const updated = await updateTask(taskId, { [fieldName]: newValue })
+      const updated = await updateTask(taskId, { [fieldName]: newValue }, t('updateError'))
       onUpdated(updated)
-      toast.success(`${label}を更新しました`)
+      toast.success(t('fieldUpdateSuccess', { field: label }))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : `${label}の更新に失敗しました`)
+      toast.error(error instanceof Error ? error.message : t('fieldUpdateError', { field: label }))
     }
   }
 
-  const current = config[value]
+  const currentClassName = classNames[value]
+  const currentLabel = getLabel(value)
 
   if (!canEdit) {
     return (
-      <span className={`rounded-full px-3 py-1 text-xs font-medium ${current.className}`}>
-        {current.label}
+      <span className={`rounded-full px-3 py-1 text-xs font-medium ${currentClassName}`}>
+        {currentLabel}
       </span>
     )
   }
@@ -371,15 +380,16 @@ const InlineSelect = <T extends string>({
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors hover:ring-1 hover:ring-foreground/20 ${current.className}`}
+        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors hover:ring-1 hover:ring-foreground/20 ${currentClassName}`}
       >
-        {current.label}
+        {currentLabel}
         <ChevronDown size={12} />
       </button>
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1 w-40 rounded-md border border-foreground/10 bg-background py-1 shadow-lg">
           {options.map((opt) => {
-            const cfg = config[opt]
+            const optClassName = classNames[opt]
+            const optLabel = getLabel(opt)
             return (
               <button
                 key={opt}
@@ -388,7 +398,7 @@ const InlineSelect = <T extends string>({
                   opt === value ? 'font-medium' : ''
                 }`}
               >
-                <span className={`rounded-full px-2 py-0.5 ${cfg.className}`}>{cfg.label}</span>
+                <span className={`rounded-full px-2 py-0.5 ${optClassName}`}>{optLabel}</span>
                 {opt === value && <Check size={12} className="ml-auto text-primary" />}
               </button>
             )
@@ -412,6 +422,8 @@ const InlineSelectAssignee = ({
   canEdit: boolean
   onUpdated: (task: TaskData) => void
 }) => {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -433,11 +445,11 @@ const InlineSelectAssignee = ({
     }
     setOpen(false)
     try {
-      const updated = await updateTask(taskId, { assigneeId: userId })
+      const updated = await updateTask(taskId, { assigneeId: userId }, t('assigneeUpdateError'))
       onUpdated(updated)
-      toast.success('担当者を更新しました')
+      toast.success(t('assigneeUpdateSuccess'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '担当者の更新に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('assigneeUpdateError'))
     }
   }
 
@@ -450,7 +462,7 @@ const InlineSelectAssignee = ({
         <span className="text-sm text-foreground">{value.name}</span>
       </div>
     ) : (
-      <p className="mt-2 text-sm text-foreground/40">未割り当て</p>
+      <p className="mt-2 text-sm text-foreground/40">{tCommon('unassigned')}</p>
     )
   }
 
@@ -468,7 +480,7 @@ const InlineSelectAssignee = ({
             <span className="text-sm text-foreground">{value.name}</span>
           </>
         ) : (
-          <span className="text-sm text-foreground/40">未割り当て</span>
+          <span className="text-sm text-foreground/40">{tCommon('unassigned')}</span>
         )}
         <ChevronDown size={12} className="ml-auto text-foreground/40" />
       </button>
@@ -480,7 +492,7 @@ const InlineSelectAssignee = ({
               !value ? 'font-medium' : ''
             }`}
           >
-            <span className="text-foreground/40">未割り当て</span>
+            <span className="text-foreground/40">{tCommon('unassigned')}</span>
             {!value && <Check size={12} className="ml-auto text-primary" />}
           </button>
           {members.map((m) => (
@@ -515,6 +527,8 @@ const InlineDatePicker = ({
   canEdit: boolean
   onUpdated: (task: TaskData) => void
 }) => {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   const dateValue = value ? new Date(value) : null
   const isOverdue = dateValue ? dateValue < new Date() : false
   const inputRef = useRef<HTMLInputElement>(null)
@@ -522,11 +536,11 @@ const InlineDatePicker = ({
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value || null
     try {
-      const updated = await updateTask(taskId, { dueDate: newValue })
+      const updated = await updateTask(taskId, { dueDate: newValue }, t('updateError'))
       onUpdated(updated)
-      toast.success('期限を更新しました')
+      toast.success(t('dueDateUpdateSuccess'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '期限の更新に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('fieldUpdateError', { field: t('dueDateLabel') }))
     }
   }
 
@@ -534,10 +548,10 @@ const InlineDatePicker = ({
     return dateValue ? (
       <p className={`mt-2 text-sm ${isOverdue ? 'font-medium text-danger' : 'text-foreground'}`}>
         {format(dateValue, 'yyyy/MM/dd')}
-        {isOverdue && <span className="ml-1 text-xs">(期限超過)</span>}
+        {isOverdue && <span className="ml-1 text-xs">({t('overdueLabel')})</span>}
       </p>
     ) : (
-      <p className="mt-2 text-sm text-foreground/40">未設定</p>
+      <p className="mt-2 text-sm text-foreground/40">{tCommon('unset')}</p>
     )
   }
 
@@ -552,7 +566,7 @@ const InlineDatePicker = ({
           isOverdue ? 'text-danger' : 'text-foreground'
         }`}
       />
-      {isOverdue && <span className="text-xs text-danger">(期限超過)</span>}
+      {isOverdue && <span className="text-xs text-danger">({t('overdueLabel')})</span>}
     </div>
   )
 }
@@ -572,6 +586,8 @@ const InlineEditNumber = ({
   canEdit: boolean
   onUpdated: (task: TaskData) => void
 }) => {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value !== null ? String(value) : '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -586,7 +602,7 @@ const InlineEditNumber = ({
   const handleSave = async () => {
     const num = draft.trim() === '' ? null : parseFloat(draft)
     if (num !== null && (isNaN(num) || num < 0)) {
-      toast.error(`${label}は0以上の数値を入力してください`)
+      toast.error(t('numberValidation', { field: label }))
       setDraft(value !== null ? String(value) : '')
       setEditing(false)
       return
@@ -596,12 +612,12 @@ const InlineEditNumber = ({
       return
     }
     try {
-      const updated = await updateTask(taskId, { [fieldName]: num })
+      const updated = await updateTask(taskId, { [fieldName]: num }, t('updateError'))
       onUpdated(updated)
-      toast.success(`${label}を更新しました`)
+      toast.success(t('fieldUpdateSuccess', { field: label }))
       setEditing(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : `${label}の更新に失敗しました`)
+      toast.error(error instanceof Error ? error.message : t('fieldUpdateError', { field: label }))
       setDraft(value !== null ? String(value) : '')
       setEditing(false)
     }
@@ -617,9 +633,9 @@ const InlineEditNumber = ({
 
   if (!canEdit) {
     return value !== null ? (
-      <p className="mt-2 text-sm text-foreground">{value} 時間</p>
+      <p className="mt-2 text-sm text-foreground">{value} {tCommon('hours')}</p>
     ) : (
-      <p className="mt-2 text-sm text-foreground/40">未設定</p>
+      <p className="mt-2 text-sm text-foreground/40">{tCommon('unset')}</p>
     )
   }
 
@@ -638,7 +654,7 @@ const InlineEditNumber = ({
             onBlur={handleSave}
             className="w-24 rounded-md border border-foreground/20 bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
           />
-          <span className="text-sm text-foreground/60">時間</span>
+          <span className="text-sm text-foreground/60">{tCommon('hours')}</span>
         </div>
       </div>
     )
@@ -648,16 +664,16 @@ const InlineEditNumber = ({
     <div
       className="group mt-2 cursor-pointer"
       onClick={() => setEditing(true)}
-      title="クリックして編集"
+      title={tCommon('clickToEdit')}
     >
       {value !== null ? (
         <p className="text-sm text-foreground">
-          {value} 時間
+          {value} {tCommon('hours')}
           <Pencil size={12} className="ml-1 inline opacity-0 transition-opacity group-hover:opacity-40" />
         </p>
       ) : (
         <p className="text-sm text-foreground/40">
-          未設定
+          {tCommon('unset')}
           <Pencil size={12} className="ml-1 inline opacity-0 transition-opacity group-hover:opacity-40" />
         </p>
       )}
@@ -678,6 +694,9 @@ const SubtaskSection = ({
   projectMembers: ProjectMemberItem[]
   onUpdated: (task: TaskData) => void
 }) => {
+  const t = useTranslations('subtasks')
+  const tCommon = useTranslations('common')
+  const tStatus = useTranslations('status')
   const [showForm, setShowForm] = useState(false)
   const [creating, setCreating] = useState(false)
   const [title, setTitle] = useState('')
@@ -713,7 +732,7 @@ const SubtaskSection = ({
 
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error?.message ?? 'サブタスクの作成に失敗しました')
+        throw new Error(json.error?.message ?? t('createError'))
       }
 
       const json = await res.json()
@@ -730,13 +749,13 @@ const SubtaskSection = ({
         })
       }
 
-      toast.success('サブタスクを作成しました')
+      toast.success(t('createSuccess'))
       setTitle('')
       setAssigneeId('')
       setDueDate('')
       setShowForm(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'サブタスクの作成に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('createError'))
     } finally {
       setCreating(false)
     }
@@ -759,7 +778,7 @@ const SubtaskSection = ({
     <section className="rounded-lg border border-foreground/10 bg-background p-4">
       <div className="flex items-center gap-2">
         <ListTodo size={16} className="text-foreground/60" />
-        <h2 className="text-sm font-semibold text-foreground">サブタスク</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t('title')}</h2>
         {totalCount > 0 && (
           <span className="text-xs text-foreground/40">
             ({doneCount}/{totalCount})
@@ -771,7 +790,7 @@ const SubtaskSection = ({
             className="ml-auto flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
           >
             <Plus size={14} />
-            追加
+            {t('add')}
           </button>
         )}
       </div>
@@ -780,7 +799,7 @@ const SubtaskSection = ({
       {totalCount > 0 && (
         <div className="mt-3">
           <div className="flex items-center justify-between text-xs text-foreground/60">
-            <span>進捗</span>
+            <span>{t('progress')}</span>
             <span>{progressPercent}%</span>
           </div>
           <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-foreground/10">
@@ -796,7 +815,7 @@ const SubtaskSection = ({
       {totalCount > 0 ? (
         <ul className="mt-3 space-y-2">
           {task.subtasks.map((subtask) => {
-            const subtaskStatus = statusConfig[subtask.status]
+            const subtaskStatusClass = statusClassNames[subtask.status]
             const subtaskDueDate = subtask.dueDate ? new Date(subtask.dueDate) : null
             const isOverdue = subtaskDueDate && subtask.status !== 'DONE' ? subtaskDueDate < new Date() : false
             return (
@@ -824,8 +843,8 @@ const SubtaskSection = ({
                       {subtask.assignee.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${subtaskStatus.className}`}>
-                    {subtaskStatus.label}
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${statusClassNames[subtask.status]}`}>
+                    {tStatus(subtask.status)}
                   </span>
                 </Link>
               </li>
@@ -833,7 +852,7 @@ const SubtaskSection = ({
           })}
         </ul>
       ) : (
-        !showForm && <p className="mt-3 text-sm text-foreground/40">サブタスクはありません</p>
+        !showForm && <p className="mt-3 text-sm text-foreground/40">{t('empty')}</p>
       )}
 
       {/* Create subtask form */}
@@ -846,20 +865,20 @@ const SubtaskSection = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="サブタスクのタイトル"
+              placeholder={t('titlePlaceholder')}
               className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none"
               maxLength={255}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-foreground/60">担当者</label>
+              <label className="mb-1 block text-xs font-medium text-foreground/60">{t('assignee')}</label>
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
                 className="w-full rounded-md border border-foreground/20 bg-background px-2 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
               >
-                <option value="">未割り当て</option>
+                <option value="">{tCommon('unassigned')}</option>
                 {projectMembers.map((m) => (
                   <option key={m.userId} value={m.userId}>
                     {m.user.name}
@@ -868,7 +887,7 @@ const SubtaskSection = ({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-foreground/60">期限</label>
+              <label className="mb-1 block text-xs font-medium text-foreground/60">{t('dueDate')}</label>
               <input
                 type="date"
                 value={dueDate}
@@ -887,14 +906,14 @@ const SubtaskSection = ({
               }}
               className="rounded-md border border-foreground/20 px-3 py-1.5 text-xs font-medium text-foreground/60 hover:bg-foreground/5"
             >
-              キャンセル
+              {tCommon('cancel')}
             </button>
             <button
               onClick={handleCreate}
               disabled={creating || !title.trim()}
               className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
-              {creating ? '作成中...' : '作成'}
+              {creating ? tCommon('creating') : tCommon('create')}
             </button>
           </div>
         </div>
@@ -916,16 +935,18 @@ const DeleteConfirmDialog = ({
   onCancel: () => void
   isDeleting: boolean
 }) => {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onCancel} />
       <div className="relative z-50 w-full max-w-md rounded-lg border border-foreground/10 bg-background p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-foreground">タスクの削除</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('deleteTitle')}</h3>
         <p className="mt-2 text-sm text-foreground/60">
-          <span className="font-medium text-foreground">{taskKey}</span> を削除しますか？
+          {t('deleteConfirm', { key: taskKey })}
         </p>
         <p className="mt-1 text-sm text-foreground/60">
-          関連するコメント・添付ファイル・サブタスクもすべて削除されます。この操作は取り消せません。
+          {t('deleteWarning')}
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <button
@@ -933,14 +954,14 @@ const DeleteConfirmDialog = ({
             disabled={isDeleting}
             className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/60 hover:bg-foreground/5 disabled:opacity-50"
           >
-            キャンセル
+            {tCommon('cancel')}
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
             className="rounded-md bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90 disabled:opacity-50"
           >
-            {isDeleting ? '削除中...' : '削除する'}
+            {isDeleting ? tCommon('deleting') : tCommon('delete')}
           </button>
         </div>
       </div>
@@ -967,6 +988,9 @@ const InlineSelectCategories = ({
   canEdit: boolean
   onUpdated: (task: TaskData) => void
 }) => {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
+  const tCategories = useTranslations('categories')
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [optimisticIds, setOptimisticIds] = useState<string[] | null>(null)
@@ -1015,19 +1039,19 @@ const InlineSelectCategories = ({
     setOptimisticIds(newIds)
     pendingRequests.current += 1
     try {
-      const updated = await updateTask(taskId, { categoryIds: newIds })
+      const updated = await updateTask(taskId, { categoryIds: newIds }, t('categoryUpdateError'))
       pendingRequests.current -= 1
       if (pendingRequests.current === 0) {
         setOptimisticIds(null)
       }
       onUpdated(updated)
-      toast.success('カテゴリを更新しました')
+      toast.success(t('categoryUpdateSuccess'))
     } catch (error) {
       pendingRequests.current -= 1
       if (pendingRequests.current === 0) {
         setOptimisticIds(null)
       }
-      toast.error(error instanceof Error ? error.message : 'カテゴリの更新に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('categoryUpdateError'))
     }
   }
 
@@ -1048,7 +1072,7 @@ const InlineSelectCategories = ({
         ))}
       </div>
     ) : (
-      <p className="mt-2 text-sm text-foreground/40">未設定</p>
+      <p className="mt-2 text-sm text-foreground/40">{tCommon('unset')}</p>
     )
   }
 
@@ -1074,14 +1098,14 @@ const InlineSelectCategories = ({
             ))}
           </div>
         ) : (
-          <span className="text-sm text-foreground/40">未設定</span>
+          <span className="text-sm text-foreground/40">{tCommon('unset')}</span>
         )}
         <ChevronDown size={12} className="ml-auto shrink-0 text-foreground/40" />
       </button>
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-md border border-foreground/10 bg-background py-1 shadow-lg">
           {categories.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-foreground/40">カテゴリがありません</p>
+            <p className="px-3 py-2 text-xs text-foreground/40">{tCategories('noCategories')}</p>
           ) : (
             categories.map((cat) => {
               const isSelected = selectedIds.includes(cat.id)
@@ -1117,6 +1141,13 @@ const InlineSelectCategories = ({
 
 export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, currentUserId }: TaskDetailClientProps) => {
   const router = useRouter()
+  const t = useTranslations('tasks')
+  const tStatus = useTranslations('status')
+  const tPriority = useTranslations('priority')
+  const tCommon = useTranslations('common')
+  const tSubtasks = useTranslations('subtasks')
+  const tComments = useTranslations('comments')
+  const tActivity = useTranslations('activity')
   const [task, setTask] = useState<TaskData>(initialTask)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -1132,19 +1163,19 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
       const res = await fetch(`/api/tasks/${task.id}`, { method: 'DELETE' })
       if (!res.ok && res.status !== 204) {
         const json = await res.json()
-        throw new Error(json.error?.message ?? 'タスクの削除に失敗しました')
+        throw new Error(json.error?.message ?? t('deleteError'))
       }
-      toast.success(`${task.project.key}-${task.taskNumber} を削除しました`)
+      toast.success(t('deleteSuccess', { key: `${task.project.key}-${task.taskNumber}` }))
       router.push(`/projects/${task.projectId}/board`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'タスクの削除に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('deleteError'))
       setIsDeleting(false)
       setShowDeleteDialog(false)
     }
   }
 
-  const status = statusConfig[task.status]
-  const priority = priorityConfig[task.priority]
+  const getStatusLabel = (key: TaskStatus) => tStatus(key)
+  const getPriorityLabel = (key: Priority) => tPriority(key)
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -1155,7 +1186,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           className="mb-4 inline-flex items-center gap-1 text-sm text-foreground/60 hover:text-foreground"
         >
           <ArrowLeft size={14} />
-          <span>{task.project.name} に戻る</span>
+          <span>{t('backToProject', { name: task.project.name })}</span>
         </Link>
 
         <div className="mt-2 flex items-start gap-3">
@@ -1172,7 +1203,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
             <button
               onClick={() => setShowDeleteDialog(true)}
               className="ml-auto mt-1 shrink-0 rounded-md p-1.5 text-foreground/40 transition-colors hover:bg-danger/10 hover:text-danger"
-              title="タスクを削除"
+              title={t('deleteTask')}
             >
               <Trash2 size={16} />
             </button>
@@ -1183,22 +1214,24 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <InlineSelect<TaskStatus>
             value={task.status}
             options={statusOptions}
-            config={statusConfig}
+            classNames={statusClassNames}
+            getLabel={getStatusLabel}
             taskId={task.id}
             fieldName="status"
             canEdit={canEdit}
             onUpdated={handleUpdated}
-            label="ステータス"
+            label={t('statusLabel')}
           />
           <InlineSelect<Priority>
             value={task.priority}
             options={priorityOptions}
-            config={priorityConfig}
+            classNames={priorityClassNames}
+            getLabel={getPriorityLabel}
             taskId={task.id}
             fieldName="priority"
             canEdit={canEdit}
             onUpdated={handleUpdated}
-            label="優先度"
+            label={t('prioritySidebar')}
           />
           {task.taskCategories.map(({ category }) => (
             <span
@@ -1220,7 +1253,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
         <div className="space-y-6 lg:col-span-2">
           {/* Description */}
           <section className="rounded-lg border border-foreground/10 bg-background p-4">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">説明</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">{t('descriptionLabel')}</h2>
             <InlineEditDescription
               value={task.description}
               taskId={task.id}
@@ -1241,7 +1274,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <section className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2">
               <MessageSquare size={16} className="text-foreground/60" />
-              <h2 className="text-sm font-semibold text-foreground">コメント</h2>
+              <h2 className="text-sm font-semibold text-foreground">{tComments('title')}</h2>
             </div>
             <div className="mt-3">
               <CommentList
@@ -1257,7 +1290,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <section className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2">
               <Activity size={16} className="text-foreground/60" />
-              <h2 className="text-sm font-semibold text-foreground">アクティビティ</h2>
+              <h2 className="text-sm font-semibold text-foreground">{tActivity('title')}</h2>
             </div>
             <div className="mt-3">
               <TaskActivityLog taskId={task.id} />
@@ -1271,7 +1304,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <User size={14} />
-              <span>担当者</span>
+              <span>{tCommon('assignee')}</span>
             </div>
             <InlineSelectAssignee
               value={task.assignee}
@@ -1286,7 +1319,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <User size={14} />
-              <span>起票者</span>
+              <span>{t('reporter')}</span>
             </div>
             <div className="mt-2 flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground/10 text-xs font-medium text-foreground/60">
@@ -1300,7 +1333,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <Calendar size={14} />
-              <span>期限</span>
+              <span>{tCommon('dueDate')}</span>
             </div>
             <InlineDatePicker
               value={task.dueDate}
@@ -1314,13 +1347,13 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <Clock size={14} />
-              <span>見積もり工数</span>
+              <span>{t('estimatedHours')}</span>
             </div>
             <InlineEditNumber
               value={task.estimatedHours}
               taskId={task.id}
               fieldName="estimatedHours"
-              label="見積もり工数"
+              label={t('estimatedHours')}
               canEdit={canEdit}
               onUpdated={handleUpdated}
             />
@@ -1330,13 +1363,13 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <Clock size={14} />
-              <span>実績工数</span>
+              <span>{t('actualHours')}</span>
             </div>
             <InlineEditNumber
               value={task.actualHours}
               taskId={task.id}
               fieldName="actualHours"
-              label="実績工数"
+              label={t('actualHours')}
               canEdit={canEdit}
               onUpdated={handleUpdated}
             />
@@ -1346,7 +1379,7 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <Tag size={14} />
-              <span>カテゴリ</span>
+              <span>{t('categoryLabel')}</span>
             </div>
             <InlineSelectCategories
               taskCategories={task.taskCategories}
@@ -1361,18 +1394,19 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <Flag size={14} />
-              <span>ステータス</span>
+              <span>{t('statusLabel')}</span>
             </div>
             <div className="mt-2">
               <InlineSelect<TaskStatus>
                 value={task.status}
                 options={statusOptions}
-                config={statusConfig}
+                classNames={statusClassNames}
+                getLabel={getStatusLabel}
                 taskId={task.id}
                 fieldName="status"
                 canEdit={canEdit}
                 onUpdated={handleUpdated}
-                label="ステータス"
+                label={t('statusLabel')}
               />
             </div>
           </div>
@@ -1381,18 +1415,19 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
           <div className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/60">
               <Flag size={14} />
-              <span>優先度</span>
+              <span>{t('prioritySidebar')}</span>
             </div>
             <div className="mt-2">
               <InlineSelect<Priority>
                 value={task.priority}
                 options={priorityOptions}
-                config={priorityConfig}
+                classNames={priorityClassNames}
+                getLabel={getPriorityLabel}
                 taskId={task.id}
                 fieldName="priority"
                 canEdit={canEdit}
                 onUpdated={handleUpdated}
-                label="優先度"
+                label={t('prioritySidebar')}
               />
             </div>
           </div>

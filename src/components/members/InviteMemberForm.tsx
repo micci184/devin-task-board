@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { UserPlus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 import { inviteMemberSchema } from '@/lib/validations/member'
@@ -16,6 +17,8 @@ interface InviteMemberFormProps {
 
 export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
   const router = useRouter()
+  const t = useTranslations('members')
+  const tCommon = useTranslations('common')
   const [loading, setLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof InviteMemberInput, string>>>({})
 
@@ -52,15 +55,15 @@ export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
       const json = await res.json()
 
       if (!res.ok) {
-        toast.error(json.error?.message ?? 'メンバーの招待に失敗しました')
+        toast.error(json.error?.message ?? t('inviteError'))
         return
       }
 
-      toast.success('メンバーを招待しました')
+      toast.success(t('inviteSuccess'))
       form.reset()
       router.refresh()
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     } finally {
       setLoading(false)
     }
@@ -70,7 +73,7 @@ export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row sm:items-end">
       <div className="flex-1">
         <label htmlFor="invite-email" className="mb-1 block text-sm font-medium text-foreground">
-          メールアドレス <span className="text-danger">*</span>
+          {t('emailLabel')} <span className="text-danger">*</span>
         </label>
         <input
           id="invite-email"
@@ -86,7 +89,7 @@ export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
 
       <div className="w-full sm:w-40">
         <label htmlFor="invite-role" className="mb-1 block text-sm font-medium text-foreground">
-          権限 <span className="text-danger">*</span>
+          {t('roleLabel')} <span className="text-danger">*</span>
         </label>
         <select
           id="invite-role"
@@ -94,9 +97,9 @@ export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
           defaultValue="MEMBER"
           className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >
-          <option value="ADMIN">管理者</option>
-          <option value="MEMBER">メンバー</option>
-          <option value="VIEWER">閲覧者</option>
+          <option value="ADMIN">{t('roles.ADMIN')}</option>
+          <option value="MEMBER">{t('roles.MEMBER')}</option>
+          <option value="VIEWER">{t('roles.VIEWER')}</option>
         </select>
         {fieldErrors.role && (
           <p className="mt-1 text-sm text-danger">{fieldErrors.role}</p>
@@ -109,7 +112,7 @@ export const InviteMemberForm = ({ projectId }: InviteMemberFormProps) => {
         className="flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
       >
         <UserPlus size={16} />
-        {loading ? '招待中...' : '招待'}
+        {loading ? t('inviting') : t('invite')}
       </button>
     </form>
   )
