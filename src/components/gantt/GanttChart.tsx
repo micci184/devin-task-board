@@ -185,6 +185,7 @@ export const GanttChart = ({
   const [dragType, setDragType] = useState<'move' | 'resize-start' | 'resize-end' | null>(null)
   const [dragStartX, setDragStartX] = useState(0)
   const [dragDeltaDays, setDragDeltaDays] = useState(0)
+  const dragDeltaDaysRef = useRef(0)
 
   useEffect(() => {
     setLocalTasks(tasks)
@@ -311,6 +312,7 @@ export const GanttChart = ({
     setDragTaskId(taskId)
     setDragType(type)
     setDragStartX(e.clientX)
+    dragDeltaDaysRef.current = 0
     setDragDeltaDays(0)
   }
 
@@ -323,11 +325,13 @@ export const GanttChart = ({
       const pxPerDay = totalTimelineWidth / totalDays
       const deltaX = e.clientX - dragStartX
       const deltaDays = Math.round(deltaX / pxPerDay)
+      dragDeltaDaysRef.current = deltaDays
       setDragDeltaDays(deltaDays)
     }
 
     const handleMouseUp = async () => {
-      if (!dragTaskId || dragDeltaDays === 0) {
+      const currentDeltaDays = dragDeltaDaysRef.current
+      if (!dragTaskId || currentDeltaDays === 0) {
         setDragTaskId(null)
         setDragType(null)
         return
@@ -347,17 +351,17 @@ export const GanttChart = ({
       let newEnd: Date
 
       if (dragType === 'move') {
-        newStart = addDays(startDate, dragDeltaDays)
-        newEnd = addDays(dueDate, dragDeltaDays)
+        newStart = addDays(startDate, currentDeltaDays)
+        newEnd = addDays(dueDate, currentDeltaDays)
       } else if (dragType === 'resize-start') {
-        newStart = addDays(startDate, dragDeltaDays)
+        newStart = addDays(startDate, currentDeltaDays)
         newEnd = dueDate
         if (newStart >= newEnd) {
           newStart = addDays(newEnd, -1)
         }
       } else {
         newStart = startDate
-        newEnd = addDays(dueDate, dragDeltaDays)
+        newEnd = addDays(dueDate, currentDeltaDays)
         if (newEnd <= newStart) {
           newEnd = addDays(newStart, 1)
         }
@@ -374,6 +378,7 @@ export const GanttChart = ({
 
       setDragTaskId(null)
       setDragType(null)
+      dragDeltaDaysRef.current = 0
       setDragDeltaDays(0)
 
       try {
