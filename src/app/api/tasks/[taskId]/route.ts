@@ -102,6 +102,7 @@ export const PATCH = async (
         assigneeId: true,
         reporterId: true,
         dueDate: true,
+        startDate: true,
         estimatedHours: true,
         actualHours: true,
         projectId: true,
@@ -150,6 +151,7 @@ export const PATCH = async (
     if (data.priority !== undefined) updateData.priority = data.priority
     if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId
     if (data.dueDate !== undefined) updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null
+    if (data.startDate !== undefined) updateData.startDate = data.startDate ? new Date(data.startDate) : null
     if (data.estimatedHours !== undefined) updateData.estimatedHours = data.estimatedHours
     if (data.actualHours !== undefined) updateData.actualHours = data.actualHours
 
@@ -221,9 +223,11 @@ export const PATCH = async (
 
       const updatedFields: Prisma.JsonObject = {}
       const oldFields: Prisma.JsonObject = {}
-      for (const key of ['title', 'description', 'priority', 'dueDate', 'estimatedHours', 'actualHours'] as const) {
+      for (const key of ['title', 'description', 'priority', 'dueDate', 'startDate', 'estimatedHours', 'actualHours'] as const) {
         if (data[key] !== undefined) {
-          const oldVal = key === 'dueDate' ? (task.dueDate ? task.dueDate.toISOString() : null) : task[key]
+          const oldVal = key === 'dueDate' ? (task.dueDate ? task.dueDate.toISOString() : null)
+            : key === 'startDate' ? (task.startDate ? task.startDate.toISOString() : null)
+            : task[key]
           const newVal = data[key]
           if (String(oldVal) !== String(newVal)) {
             updatedFields[key] = newVal as Prisma.JsonValue

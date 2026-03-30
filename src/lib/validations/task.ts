@@ -26,6 +26,7 @@ export const updateTaskSchema = z.object({
   priority: z.enum(['URGENT', 'HIGH', 'MEDIUM', 'LOW', 'NONE']).optional(),
   assigneeId: z.string().nullable().optional(),
   dueDate: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
   estimatedHours: z.number().min(0, '見積もり工数は0以上で入力してください').nullable().optional(),
   actualHours: z.number().min(0, '実績工数は0以上で入力してください').nullable().optional(),
   categoryIds: z.array(z.string()).optional(),
