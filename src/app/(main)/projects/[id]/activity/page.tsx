@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { getTranslations } from 'next-intl/server'
+
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { ProjectActivityFeed } from '@/components/projects/ProjectActivityFeed'
@@ -43,7 +45,7 @@ const ActivityPage = async ({ params }: ActivityPageProps) => {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-          <p className="text-sm text-foreground/60">アクティビティフィード</p>
+          <p className="text-sm text-foreground/60">{(await getTranslations('projects'))('activityFeed')}</p>
         </div>
       </div>
 

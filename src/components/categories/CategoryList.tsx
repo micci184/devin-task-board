@@ -4,20 +4,21 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { Pencil, Trash2, Check, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 import { updateCategorySchema } from '@/lib/validations/category'
 
 const COLOR_PRESETS = [
-  { label: '赤', value: 'oklch(0.55 0.22 27)' },
-  { label: '青', value: 'oklch(0.55 0.12 250)' },
-  { label: '緑', value: 'oklch(0.55 0.15 160)' },
-  { label: '紫', value: 'oklch(0.55 0.15 300)' },
-  { label: 'オレンジ', value: 'oklch(0.65 0.18 55)' },
-  { label: 'ピンク', value: 'oklch(0.6 0.18 350)' },
-  { label: 'シアン', value: 'oklch(0.65 0.12 200)' },
-  { label: 'イエロー', value: 'oklch(0.75 0.15 85)' },
-]
+  { key: 'red', value: 'oklch(0.55 0.22 27)' },
+  { key: 'blue', value: 'oklch(0.55 0.12 250)' },
+  { key: 'green', value: 'oklch(0.55 0.15 160)' },
+  { key: 'purple', value: 'oklch(0.55 0.15 300)' },
+  { key: 'orange', value: 'oklch(0.65 0.18 55)' },
+  { key: 'pink', value: 'oklch(0.6 0.18 350)' },
+  { key: 'cyan', value: 'oklch(0.65 0.12 200)' },
+  { key: 'yellow', value: 'oklch(0.75 0.15 85)' },
+] as const
 
 interface Category {
   id: string
@@ -35,6 +36,8 @@ interface CategoryListProps {
 
 export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
   const router = useRouter()
+  const t = useTranslations('categories')
+  const tCommon = useTranslations('common')
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
@@ -72,15 +75,15 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
       const json = await res.json()
 
       if (!res.ok) {
-        toast.error(json.error?.message ?? 'カテゴリの更新に失敗しました')
+        toast.error(json.error?.message ?? t('updateError'))
         return
       }
 
-      toast.success('カテゴリを更新しました')
+      toast.success(t('updateSuccess'))
       cancelEdit()
       router.refresh()
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     } finally {
       setLoadingId(null)
     }
@@ -95,15 +98,15 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
 
       if (!res.ok) {
         const json = await res.json()
-        toast.error(json.error?.message ?? 'カテゴリの削除に失敗しました')
+        toast.error(json.error?.message ?? t('deleteError'))
         return
       }
 
-      toast.success('カテゴリを削除しました')
+      toast.success(t('deleteSuccess'))
       setConfirmDeleteId(null)
       router.refresh()
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     } finally {
       setLoadingId(null)
     }
@@ -112,7 +115,7 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
   if (categories.length === 0) {
     return (
       <div className="rounded-lg border border-foreground/10 p-6 text-center text-sm text-foreground/50">
-        カテゴリがまだ登録されていません
+        {t('empty')}
       </div>
     )
   }
@@ -142,7 +145,7 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
                     onClick={() => handleUpdate(category.id)}
                     disabled={isLoading}
                     className="rounded-md p-1.5 text-success hover:bg-success/10 disabled:opacity-50"
-                    title="保存"
+                    title={tCommon('save')}
                   >
                     <Check size={16} />
                   </button>
@@ -150,7 +153,7 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
                     onClick={cancelEdit}
                     disabled={isLoading}
                     className="rounded-md p-1.5 text-foreground/40 hover:bg-foreground/5 disabled:opacity-50"
-                    title="キャンセル"
+                    title={tCommon('cancel')}
                   >
                     <X size={16} />
                   </button>
@@ -167,7 +170,7 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
                           : 'hover:opacity-80'
                       }`}
                       style={{ backgroundColor: preset.value }}
-                      title={preset.label}
+                      title={t(`colors.${preset.key}`)}
                     />
                   ))}
                 </div>
@@ -191,14 +194,14 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
                       disabled={isLoading}
                       className="rounded-md bg-danger px-2 py-1 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                     >
-                      {isLoading ? '削除中...' : '確認'}
+                      {isLoading ? tCommon('deleting') : tCommon('confirm')}
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(null)}
                       disabled={isLoading}
                       className="rounded-md border border-foreground/20 px-2 py-1 text-xs font-medium text-foreground hover:bg-foreground/5 disabled:opacity-50"
                     >
-                      取消
+                      {tCommon('cancel')}
                     </button>
                   </div>
                 ) : (
@@ -207,7 +210,7 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
                       onClick={() => startEdit(category)}
                       disabled={isLoading}
                       className="rounded-md p-1.5 text-foreground/40 hover:bg-primary/10 hover:text-primary disabled:opacity-50"
-                      title="カテゴリを編集"
+                      title={t('editCategory')}
                     >
                       <Pencil size={14} />
                     </button>
@@ -215,7 +218,7 @@ export const CategoryList = ({ categories, canManage }: CategoryListProps) => {
                       onClick={() => setConfirmDeleteId(category.id)}
                       disabled={isLoading}
                       className="rounded-md p-1.5 text-foreground/40 hover:bg-danger/10 hover:text-danger disabled:opacity-50"
-                      title="カテゴリを削除"
+                      title={t('deleteCategory')}
                     >
                       <Trash2 size={14} />
                     </button>

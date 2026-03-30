@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { SortableTaskCard } from '@/components/tasks/TaskCard'
 
@@ -42,6 +43,7 @@ export const KanbanColumn = ({
   onQuickCreate,
   activeTaskId,
 }: KanbanColumnProps) => {
+  const tBoard = useTranslations('board')
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const [isCreating, setIsCreating] = useState(false)
   const [title, setTitle] = useState('')
@@ -100,7 +102,7 @@ export const KanbanColumn = ({
         <button
           onClick={handleOpenForm}
           className="flex h-6 w-6 items-center justify-center rounded text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
-          aria-label={`${label}にタスクを追加`}
+          aria-label={tBoard('addTask', { column: label })}
         >
           <Plus size={14} />
         </button>
@@ -118,12 +120,12 @@ export const KanbanColumn = ({
               onBlur={() => {
                 if (!title.trim()) handleCancel()
               }}
-              placeholder="タイトルを入力..."
+              placeholder={tBoard('titlePlaceholder')}
               disabled={submitting}
               className="w-full rounded border border-foreground/20 bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
             />
             <p className="mt-1 text-xs text-foreground/40">
-              Enter で作成 / Esc でキャンセル
+              {tBoard('quickCreateHint')}
             </p>
           </div>
         )}

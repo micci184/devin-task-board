@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { getTranslations } from 'next-intl/server'
+
 import { auth } from '@/lib/auth'
 import { ProjectCreateForm } from '@/components/projects/ProjectCreateForm'
 
@@ -9,14 +11,16 @@ const NewProjectPage = async () => {
     redirect('/login')
   }
 
+  const t = await getTranslations('projects')
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">
-          新規プロジェクト作成
+          {t('createTitle')}
         </h1>
         <p className="text-sm text-foreground/60">
-          プロジェクト名と説明を入力してください
+          {t('createDescription')}
         </p>
       </div>
 

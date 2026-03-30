@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
+import { getTranslations } from 'next-intl/server'
+
 import { NotificationList } from '@/components/notifications/NotificationList'
 
 const NotificationsPage = async () => {
@@ -36,7 +38,7 @@ const NotificationsPage = async () => {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-xl font-bold text-foreground">通知</h1>
+      <h1 className="text-xl font-bold text-foreground">{(await getTranslations('notifications'))('title')}</h1>
       <NotificationList
         initialNotifications={serialized}
         initialPagination={{

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { FolderKanban, Plus, Users, ListTodo } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
@@ -11,6 +12,8 @@ const ProjectsPage = async () => {
   if (!session?.user) {
     redirect('/login')
   }
+
+  const t = await getTranslations('projects')
 
   const projects = await prisma.project.findMany({
     where: {
@@ -33,9 +36,9 @@ const ProjectsPage = async () => {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">プロジェクト</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
           <p className="text-sm text-foreground/60">
-            参加中のプロジェクト一覧
+            {t('listDescription')}
           </p>
         </div>
         <Link
@@ -43,7 +46,7 @@ const ProjectsPage = async () => {
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus size={16} />
-          新規プロジェクト
+          {t('newProject')}
         </Link>
       </div>
 
@@ -51,14 +54,14 @@ const ProjectsPage = async () => {
         <div className="flex flex-col items-center justify-center rounded-lg border border-foreground/10 py-16">
           <FolderKanban size={48} className="text-foreground/20" />
           <p className="mt-4 text-sm text-foreground/60">
-            プロジェクトがありません
+            {t('noProjects')}
           </p>
           <Link
             href="/projects/new"
             className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <Plus size={16} />
-            最初のプロジェクトを作成
+            {t('createFirst')}
           </Link>
         </div>
       ) : (
@@ -90,11 +93,11 @@ const ProjectsPage = async () => {
               <div className="flex items-center gap-4 text-xs text-foreground/50">
                 <span className="inline-flex items-center gap-1">
                   <ListTodo size={14} />
-                  {project._count.tasks} タスク
+                  {project._count.tasks} {t('tasks')}
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <Users size={14} />
-                  {project._count.projectMembers} メンバー
+                  {project._count.projectMembers} {t('members')}
                 </span>
               </div>
             </Link>

@@ -4,6 +4,7 @@ import { useActionState, useEffect } from 'react'
 
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 import { updateProject } from '@/lib/actions/project'
 
@@ -20,6 +21,8 @@ export const ProjectSettingsForm = ({
   defaultName,
   defaultDescription,
 }: ProjectSettingsFormProps) => {
+  const t = useTranslations('projects')
+  const tCommon = useTranslations('common')
   const [state, formAction, isPending] = useActionState<
     ProjectActionState | null,
     FormData
@@ -27,7 +30,7 @@ export const ProjectSettingsForm = ({
 
   useEffect(() => {
     if (state?.success) {
-      toast.success('プロジェクトを更新しました')
+      toast.success(t('updateSuccess'))
     }
     if (state?.error) {
       toast.error(state.error)
@@ -37,7 +40,7 @@ export const ProjectSettingsForm = ({
   return (
     <form action={formAction} className="space-y-6">
       <div className="rounded-lg border border-foreground/10 p-6">
-        <h2 className="mb-4 text-lg font-semibold text-foreground">基本情報</h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">{t('basicInfo')}</h2>
 
         <input type="hidden" name="projectId" value={projectId} />
 
@@ -47,7 +50,7 @@ export const ProjectSettingsForm = ({
               htmlFor="name"
               className="block text-sm font-medium text-foreground"
             >
-              プロジェクト名 <span className="text-danger">*</span>
+              {t('name')} <span className="text-danger">*</span>
             </label>
             <input
               id="name"
@@ -64,7 +67,7 @@ export const ProjectSettingsForm = ({
               htmlFor="description"
               className="block text-sm font-medium text-foreground"
             >
-              説明
+              {tCommon('description')}
             </label>
             <textarea
               id="description"
@@ -83,7 +86,7 @@ export const ProjectSettingsForm = ({
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             {isPending && <Loader2 size={14} className="animate-spin" />}
-            {isPending ? '保存中...' : '変更を保存'}
+            {isPending ? tCommon('saving') : t('saveChanges')}
           </button>
         </div>
       </div>

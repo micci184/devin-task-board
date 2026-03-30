@@ -16,7 +16,7 @@ import {
   isWeekend,
   startOfWeek,
 } from 'date-fns'
-import { ja } from 'date-fns/locale'
+import { ja, enUS } from 'date-fns/locale'
 import {
   AlertTriangle,
   Calendar,
@@ -26,6 +26,7 @@ import {
   Layers,
   User,
 } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 import type { Priority, TaskStatus } from '@prisma/client'
@@ -76,9 +77,9 @@ const HEADER_HEIGHT = 56
 const LEFT_PANEL_WIDTH = 280
 
 const viewModeConfig = {
-  day: { cellWidth: 40, label: '日' },
-  week: { cellWidth: 120, label: '週' },
-  month: { cellWidth: 180, label: '月' },
+  day: { cellWidth: 40 },
+  week: { cellWidth: 120 },
+  month: { cellWidth: 180 },
 } as const
 
 const priorityColors: Record<Priority, string> = {
@@ -99,9 +100,10 @@ interface TaskGroup {
 const groupTasks = (
   tasks: GanttTask[],
   groupBy: GroupBy,
+  labels: { allTasks: string; uncategorized: string; unassigned: string },
 ): TaskGroup[] => {
   if (groupBy === 'none') {
-    return [{ key: 'all', label: 'すべてのタスク', tasks }]
+    return [{ key: 'all', label: labels.allTasks, tasks }]
   }
 
   if (groupBy === 'category') {
@@ -132,7 +134,7 @@ const groupTasks = (
       groups.push({ key, label: value.label, color: value.color, tasks: value.tasks })
     }
     if (uncategorized.length > 0) {
-      groups.push({ key: 'uncategorized', label: '未分類', tasks: uncategorized })
+      groups.push({ key: 'uncategorized', label: labels.uncategorized, tasks: uncategorized })
     }
     return groups
   }
@@ -162,7 +164,7 @@ const groupTasks = (
     groups.push({ key, label: value.label, tasks: value.tasks })
   }
   if (unassigned.length > 0) {
-    groups.push({ key: 'unassigned', label: '未割当', tasks: unassigned })
+    groups.push({ key: 'unassigned', label: labels.unassigned, tasks: unassigned })
   }
   return groups
 }
@@ -174,6 +176,10 @@ export const GanttChart = ({
   members: _members,
 }: GanttChartProps) => {
   const router = useRouter()
+  const t = useTranslations('gantt')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
+  const dateFnsLocale = locale === 'ja' ? ja : enUS
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const hasScrolledRef = useRef(false)
 
@@ -211,7 +217,7 @@ export const GanttChart = ({
     if (validTasks.length === 0) {
       const s = addDays(today, -14)
       const e = addDays(today, 30)
-      return { timelineStart: startOfWeek(s, { locale: ja }), timelineEnd: endOfWeek(e, { locale: ja }) }
+      return { timelineStart: startOfWeek(s, { locale: dateFnsLocale }), timelineEnd: endOfWeek(e, { locale: dateFnsLocale }) }
     }
 
     let earliest = today
@@ -226,8 +232,8 @@ export const GanttChart = ({
       if (end && end < earliest) earliest = end
     }
 
-    const s = addDays(startOfWeek(earliest, { locale: ja }), -7)
-    const e = addDays(endOfWeek(latest, { locale: ja }), 14)
+    const s = addDays(startOfWeek(earliest, { locale: dateFnsLocale }), -7)
+    const e = addDays(endOfWeek(latest, { locale: dateFnsLocale }), 14)
     return { timelineStart: s, timelineEnd: e }
   }
   const { timelineStart, timelineEnd } = computeTimelineRange()
@@ -238,7 +244,7 @@ export const GanttChart = ({
       return eachDayOfInterval({ start: timelineStart, end: timelineEnd })
     }
     if (viewMode === 'week') {
-      return eachWeekOfInterval({ start: timelineStart, end: timelineEnd }, { locale: ja })
+      return eachWeekOfInterval({ start: timelineStart, end: timelineEnd }, { locale: dateFnsLocale })
     }
     return eachMonthOfInterval({ start: timelineStart, end: timelineEnd })
   }
@@ -265,7 +271,11 @@ export const GanttChart = ({
     }
   }
 
-  const groups = groupTasks(scheduledTasks, groupBy)
+  const groups = groupTasks(scheduledTasks, groupBy, {
+    allTasks: t('allTasks'),
+    uncategorized: t('uncategorized'),
+    unassigned: tCommon('unassigned'),
+  })
 
   // Build flat row list for rendering
   const rows: Array<{ type: 'group'; group: TaskGroup } | { type: 'task'; task: GanttTask; groupKey: string }> = []
@@ -406,15 +416,15 @@ export const GanttChart = ({
 
         if (!res.ok) {
           const json = await res.json()
-          throw new Error(json.error?.message ?? '期限の更新に失敗しました')
+          throw new Error(json.error?.message ?? t('updateError'))
         }
 
-        toast.success('スケジュールを更新しました')
+        toast.success(t('updateSuccess'))
         router.refresh()
       } catch (error) {
         setLocalTasks(tasksRef.current)
         toast.error(
-          error instanceof Error ? error.message : '期限の更新に失敗しました',
+          error instanceof Error ? error.message : t('updateError'),
         )
       }
     }
@@ -466,32 +476,32 @@ export const GanttChart = ({
   // Format header labels
   const formatHeaderLabel = (date: Date) => {
     if (viewMode === 'day') {
-      return format(date, 'd', { locale: ja })
+      return format(date, 'd', { locale: dateFnsLocale })
     }
     if (viewMode === 'week') {
-      const weekEnd = endOfWeek(date, { locale: ja })
-      return `${format(date, 'M/d', { locale: ja })} - ${format(weekEnd, 'M/d', { locale: ja })}`
+      const weekEnd = endOfWeek(date, { locale: dateFnsLocale })
+      return `${format(date, 'M/d', { locale: dateFnsLocale })} - ${format(weekEnd, 'M/d', { locale: dateFnsLocale })}`
     }
-    return format(date, 'yyyy年M月', { locale: ja })
+    return locale === 'ja' ? format(date, 'yyyy年M月', { locale: dateFnsLocale }) : format(date, 'MMM yyyy', { locale: dateFnsLocale })
   }
 
   // Format top-level header
   const formatTopHeader = (date: Date, index: number, cells: Date[]) => {
     if (viewMode === 'day') {
       if (index === 0 || !isSameMonth(date, cells[index - 1])) {
-        return format(date, 'yyyy年M月', { locale: ja })
+        return locale === 'ja' ? format(date, 'yyyy年M月', { locale: dateFnsLocale }) : format(date, 'MMM yyyy', { locale: dateFnsLocale })
       }
       return null
     }
     if (viewMode === 'week') {
       if (index === 0 || !isSameMonth(date, cells[index - 1])) {
-        return format(date, 'yyyy年M月', { locale: ja })
+        return locale === 'ja' ? format(date, 'yyyy年M月', { locale: dateFnsLocale }) : format(date, 'MMM yyyy', { locale: dateFnsLocale })
       }
       return null
     }
     // month
     if (index === 0 || date.getFullYear() !== cells[index - 1].getFullYear()) {
-      return `${date.getFullYear()}年`
+      return locale === 'ja' ? `${date.getFullYear()}年` : `${date.getFullYear()}`
     }
     return null
   }
@@ -514,7 +524,7 @@ export const GanttChart = ({
                   : 'bg-background text-foreground/60 hover:bg-foreground/5'
               }`}
             >
-              {viewModeConfig[mode].label}
+              {t(`viewMode.${mode}`)}
             </button>
           ))}
         </div>
@@ -532,7 +542,7 @@ export const GanttChart = ({
             className="flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-foreground/60 hover:bg-foreground/5"
           >
             <Calendar size={14} />
-            今日
+            {t('today')}
           </button>
           <button
             onClick={() => navigate('next')}
@@ -552,7 +562,7 @@ export const GanttChart = ({
                 : 'bg-background text-foreground/60 hover:bg-foreground/5'
             }`}
           >
-            なし
+            {t('groupBy.none')}
           </button>
           <button
             onClick={() => setGroupBy('category')}
@@ -563,7 +573,7 @@ export const GanttChart = ({
             }`}
           >
             <Layers size={12} />
-            カテゴリ
+            {t('groupBy.category')}
           </button>
           <button
             onClick={() => setGroupBy('assignee')}
@@ -574,7 +584,7 @@ export const GanttChart = ({
             }`}
           >
             <User size={12} />
-            担当者
+            {t('groupBy.assignee')}
           </button>
         </div>
       </div>
@@ -584,10 +594,9 @@ export const GanttChart = ({
         <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-warning">
           <AlertTriangle size={14} />
           <span>
-            開始日または期限が未設定のタスクが {unscheduledTasks.length} 件あります:
-            {' '}
-            {unscheduledTasks.slice(0, 5).map((t) => `${projectKey}-${t.taskNumber}`).join(', ')}
-            {unscheduledTasks.length > 5 && ` 他${unscheduledTasks.length - 5}件`}
+            {t('unscheduledWarning', { count: unscheduledTasks.length })}{' '}
+            {unscheduledTasks.slice(0, 5).map((item) => `${projectKey}-${item.taskNumber}`).join(', ')}
+            {unscheduledTasks.length > 5 && t('unscheduledMore', { count: unscheduledTasks.length - 5 })}
           </span>
         </div>
       )}
@@ -605,7 +614,7 @@ export const GanttChart = ({
               className="flex items-center border-b border-foreground/10 px-3 text-xs font-medium text-foreground/60"
               style={{ height: HEADER_HEIGHT }}
             >
-              タスク
+              {t('taskColumn')}
             </div>
 
             {/* Left panel rows */}
@@ -815,9 +824,9 @@ export const GanttChart = ({
                               <div className="pointer-events-none absolute -top-10 left-0 z-30 hidden rounded-md border border-foreground/10 bg-background px-2 py-1 text-[10px] shadow-md group-hover:block">
                                 <span className="font-medium">{projectKey}-{task.taskNumber}</span>
                                 <span className="ml-1 text-foreground/50">
-                                  {dates && format(dates.startDate, 'M/d', { locale: ja })}
+                                  {dates && format(dates.startDate, 'M/d', { locale: dateFnsLocale })}
                                   {' → '}
-                                  {dates && format(dates.dueDate, 'M/d', { locale: ja })}
+                                  {dates && format(dates.dueDate, 'M/d', { locale: dateFnsLocale })}
                                 </span>
                               </div>
                             )
@@ -833,7 +842,7 @@ export const GanttChart = ({
                     className="flex items-center justify-center text-sm text-foreground/40"
                     style={{ height: TASK_ROW_HEIGHT * 3 }}
                   >
-                    スケジュールが設定されたタスクがありません
+                    {t('noScheduledTasks')}
                   </div>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Calendar } from 'lucide-react'
 import { format } from 'date-fns'
+import { useTranslations } from 'next-intl'
 
 import type { Priority } from '@prisma/client'
 
@@ -36,16 +37,16 @@ interface SortableTaskCardProps extends TaskCardProps {
   isDragOverlay: boolean
 }
 
-const priorityConfig: Record<Priority, { label: string; className: string }> = {
-  URGENT: { label: '緊急', className: 'bg-danger/10 text-danger' },
-  HIGH: { label: '高', className: 'bg-warning/10 text-warning' },
-  MEDIUM: { label: '中', className: 'bg-primary/10 text-primary' },
-  LOW: { label: '低', className: 'bg-foreground/10 text-foreground/60' },
-  NONE: { label: '-', className: 'bg-foreground/5 text-foreground/40' },
+const priorityClassNames: Record<Priority, string> = {
+  URGENT: 'bg-danger/10 text-danger',
+  HIGH: 'bg-warning/10 text-warning',
+  MEDIUM: 'bg-primary/10 text-primary',
+  LOW: 'bg-foreground/10 text-foreground/60',
+  NONE: 'bg-foreground/5 text-foreground/40',
 }
 
 export const TaskCard = ({ task, projectKey }: TaskCardProps) => {
-  const priority = priorityConfig[task.priority]
+  const tPriority = useTranslations('priority')
   const dueDate = task.dueDate ? new Date(task.dueDate) : null
   const isOverdue = dueDate ? dueDate < new Date() : false
 
@@ -56,8 +57,8 @@ export const TaskCard = ({ task, projectKey }: TaskCardProps) => {
           {projectKey}-{task.taskNumber}
         </span>
         {task.priority !== 'NONE' && (
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${priority.className}`}>
-            {priority.label}
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${priorityClassNames[task.priority]}`}>
+            {tPriority(task.priority)}
           </span>
         )}
       </div>

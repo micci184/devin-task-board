@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
+import { useTranslations } from 'next-intl'
 
 type TrendItem = {
   date: string
@@ -21,6 +22,7 @@ type Props = {
 }
 
 export const CompletionTrendChart = ({ data }: Props) => {
+  const t = useTranslations('dashboard')
   const chartData = data.map((item) => ({
     ...item,
     label: format(parseISO(item.date), 'M/d'),
@@ -28,7 +30,7 @@ export const CompletionTrendChart = ({ data }: Props) => {
 
   return (
     <div className="rounded-lg border border-foreground/10 bg-background p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">直近7日間の完了タスク推移</h3>
+      <h3 className="mb-4 text-sm font-semibold text-foreground">{t('completionTrend')}</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
@@ -55,7 +57,7 @@ export const CompletionTrendChart = ({ data }: Props) => {
             <Line
               type="monotone"
               dataKey="count"
-              name="完了タスク数"
+              name={t('completedTaskCount')}
               stroke="#34d399"
               strokeWidth={2}
               dot={{ fill: '#34d399', r: 4 }}

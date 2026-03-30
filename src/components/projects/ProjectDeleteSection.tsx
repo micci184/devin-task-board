@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { Trash2, Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { deleteProject } from '@/lib/actions/project'
 
@@ -15,6 +16,8 @@ export const ProjectDeleteSection = ({
   projectId,
   projectName,
 }: ProjectDeleteSectionProps) => {
+  const t = useTranslations('projects')
+  const tCommon = useTranslations('common')
   const [showDialog, setShowDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [confirmText, setConfirmText] = useState('')
@@ -30,7 +33,7 @@ export const ProjectDeleteSection = ({
         setIsDeleting(false)
       }
     } catch {
-      setError('予期しないエラーが発生しました')
+      setError(tCommon('unexpectedError'))
       setIsDeleting(false)
     }
   }
@@ -38,16 +41,16 @@ export const ProjectDeleteSection = ({
   return (
     <>
       <div className="rounded-lg border border-danger/30 p-6">
-        <h2 className="mb-2 text-lg font-semibold text-danger">危険な操作</h2>
+        <h2 className="mb-2 text-lg font-semibold text-danger">{t('dangerZone')}</h2>
         <p className="mb-4 text-sm text-foreground/60">
-          プロジェクトを削除すると、すべてのタスク・コメント・添付ファイルが完全に削除されます。この操作は取り消せません。
+          {t('deleteWarning')}
         </p>
         <button
           onClick={() => setShowDialog(true)}
           className="inline-flex items-center gap-2 rounded-md border border-danger/30 bg-danger/10 px-4 py-2 text-sm font-medium text-danger transition-colors hover:bg-danger/20"
         >
           <Trash2 size={14} />
-          プロジェクトを削除
+          {t('deleteProject')}
         </button>
       </div>
 
@@ -55,14 +58,13 @@ export const ProjectDeleteSection = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50">
           <div className="mx-4 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-foreground">
-              プロジェクトの削除
+              {t('deleteProject')}
             </h3>
             <p className="mt-2 text-sm text-foreground/60">
-              本当に &ldquo;{projectName}&rdquo;
-              を削除しますか？この操作は取り消せません。
+              {t('deleteConfirm', { name: projectName })}
             </p>
             <p className="mt-3 text-sm text-foreground/60">
-              確認のため、プロジェクト名を入力してください：
+              {t('deleteConfirmInput')}
             </p>
             {error && (
               <div className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
@@ -85,7 +87,7 @@ export const ProjectDeleteSection = ({
                 }}
                 className="rounded-md border border-foreground/10 px-4 py-2 text-sm font-medium text-foreground/60 transition-colors hover:bg-foreground/5"
               >
-                キャンセル
+                {tCommon('cancel')}
               </button>
               <button
                 onClick={handleDelete}
@@ -93,7 +95,7 @@ export const ProjectDeleteSection = ({
                 className="inline-flex items-center gap-2 rounded-md bg-danger px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-danger/90 disabled:opacity-50"
               >
                 {isDeleting && <Loader2 size={14} className="animate-spin" />}
-                {isDeleting ? '削除中...' : '削除する'}
+                {isDeleting ? tCommon('deleting') : tCommon('delete')}
               </button>
             </div>
           </div>
