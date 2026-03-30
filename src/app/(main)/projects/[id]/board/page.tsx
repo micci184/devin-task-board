@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { KanbanBoard } from '@/components/board/KanbanBoard'
+import { ProjectNav } from '@/components/projects/ProjectNav'
 
 interface BoardPageProps {
   params: Promise<{ id: string }>
@@ -55,6 +56,10 @@ const BoardPage = async ({ params }: BoardPageProps) => {
           <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
           <p className="text-sm text-foreground/60">カンバンボード</p>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <ProjectNav projectId={projectId} />
       </div>
 
       <KanbanBoard

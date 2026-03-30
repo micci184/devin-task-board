@@ -2,14 +2,14 @@ import { redirect } from 'next/navigation'
 
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
-import { TaskListView } from '@/components/tasks/TaskListView'
+import { ProjectActivityFeed } from '@/components/projects/ProjectActivityFeed'
 import { ProjectNav } from '@/components/projects/ProjectNav'
 
-interface ListPageProps {
+interface ActivityPageProps {
   params: Promise<{ id: string }>
 }
 
-const ListPage = async ({ params }: ListPageProps) => {
+const ActivityPage = async ({ params }: ActivityPageProps) => {
   const session = await auth()
   if (!session?.user) {
     redirect('/login')
@@ -25,12 +25,25 @@ const ListPage = async ({ params }: ListPageProps) => {
     redirect('/projects')
   }
 
+  const member = await prisma.projectMember.findUnique({
+    where: {
+      projectId_userId: {
+        projectId,
+        userId: session.user.id,
+      },
+    },
+  })
+
+  if (!member) {
+    redirect('/projects')
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-          <p className="text-sm text-foreground/60">リストビュー</p>
+          <p className="text-sm text-foreground/60">アクティビティフィード</p>
         </div>
       </div>
 
@@ -38,8 +51,10 @@ const ListPage = async ({ params }: ListPageProps) => {
         <ProjectNav projectId={projectId} />
       </div>
 
-      <TaskListView projectId={projectId} projectKey={project.key} />
+      <div className="rounded-lg border border-foreground/10 bg-background p-5">
+        <ProjectActivityFeed projectId={projectId} />
+      </div>
     </div>
   )
 }
-export default ListPage
+export default ActivityPage
