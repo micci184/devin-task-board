@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 
 import { MarkdownPreview } from '@/components/tasks/MarkdownPreview'
 import { CommentList } from '@/components/comments/CommentList'
+import { TaskActivityLog } from '@/components/tasks/TaskActivityLog'
 
 import type { Priority, TaskStatus } from '@prisma/client'
 
@@ -1252,15 +1253,15 @@ export const TaskDetailClient = ({ task: initialTask, projectMembers, canEdit, c
             </div>
           </section>
 
-          {/* Activity placeholder */}
+          {/* Activity */}
           <section className="rounded-lg border border-foreground/10 bg-background p-4">
             <div className="flex items-center gap-2">
               <Activity size={16} className="text-foreground/60" />
               <h2 className="text-sm font-semibold text-foreground">アクティビティ</h2>
             </div>
-            <p className="mt-3 text-sm text-foreground/40">
-              アクティビティ機能は今後実装予定です
-            </p>
+            <div className="mt-3">
+              <TaskActivityLog taskId={task.id} />
+            </div>
           </section>
         </div>
 
