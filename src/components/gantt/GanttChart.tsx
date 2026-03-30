@@ -5,19 +5,15 @@ import { useRouter } from 'next/navigation'
 
 import {
   addDays,
-  addMonths,
-  addWeeks,
   differenceInDays,
   eachDayOfInterval,
   eachMonthOfInterval,
   eachWeekOfInterval,
-  endOfMonth,
   endOfWeek,
   format,
   isSameDay,
   isSameMonth,
   isWeekend,
-  startOfMonth,
   startOfWeek,
 } from 'date-fns'
 import { ja } from 'date-fns/locale'
@@ -91,14 +87,6 @@ const priorityColors: Record<Priority, string> = {
   MEDIUM: 'var(--primary)',
   LOW: 'oklch(0.6 0.05 255)',
   NONE: 'oklch(0.5 0.02 255)',
-}
-
-const statusLabels: Record<TaskStatus, string> = {
-  BACKLOG: 'Backlog',
-  TODO: 'Todo',
-  IN_PROGRESS: 'In Progress',
-  IN_REVIEW: 'In Review',
-  DONE: 'Done',
 }
 
 interface TaskGroup {
