@@ -41,6 +41,14 @@ const subjectMap: Record<NotificationType, { ja: string; en: string }> = {
   },
 }
 
+const escapeHtml = (str: string): string =>
+  str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+
 const buildHtmlBody = (params: EmailNotificationParams): string => {
   const isJa = params.locale === 'ja'
   const taskLink = params.linkUrl ? `${appUrl}${params.linkUrl}` : null
@@ -57,8 +65,8 @@ const buildHtmlBody = (params: EmailNotificationParams): string => {
   <div style="border-bottom: 2px solid #6366f1; padding-bottom: 16px; margin-bottom: 24px;">
     <h2 style="margin: 0; color: #6366f1;">devin-task-board</h2>
   </div>
-  <h3 style="margin: 0 0 8px 0; color: #111;">${params.title}</h3>
-  <p style="margin: 0 0 24px 0; color: #555; line-height: 1.6;">${params.message}</p>
+  <h3 style="margin: 0 0 8px 0; color: #111;">${escapeHtml(params.title)}</h3>
+  <p style="margin: 0 0 24px 0; color: #555; line-height: 1.6;">${escapeHtml(params.message)}</p>
   ${
     taskLink
       ? `<a href="${taskLink}" style="display: inline-block; background: #6366f1; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">${viewTaskLabel}</a>`
