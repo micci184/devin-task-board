@@ -3,24 +3,26 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Kanban, List, Activity, Settings } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface ProjectNavProps {
   projectId: string
 }
 
-const navItems = [
-  { key: 'board', label: 'ボード', icon: Kanban, href: (id: string) => `/projects/${id}/board` },
-  { key: 'list', label: 'リスト', icon: List, href: (id: string) => `/projects/${id}/list` },
-  { key: 'activity', label: 'アクティビティ', icon: Activity, href: (id: string) => `/projects/${id}/activity` },
-  { key: 'settings', label: '設定', icon: Settings, href: (id: string) => `/projects/${id}/settings` },
-]
+const navKeys = [
+  { key: 'board', icon: Kanban, href: (id: string) => `/projects/${id}/board` },
+  { key: 'list', icon: List, href: (id: string) => `/projects/${id}/list` },
+  { key: 'activity', icon: Activity, href: (id: string) => `/projects/${id}/activity` },
+  { key: 'settings', icon: Settings, href: (id: string) => `/projects/${id}/settings` },
+] as const
 
 export const ProjectNav = ({ projectId }: ProjectNavProps) => {
   const pathname = usePathname()
+  const t = useTranslations('projectNav')
 
   return (
     <nav className="flex gap-1 border-b border-foreground/10 pb-4">
-      {navItems.map((item) => {
+      {navKeys.map((item) => {
         const href = item.href(projectId)
         const isActive = pathname === href || pathname.startsWith(href + '/')
         const Icon = item.icon
@@ -36,7 +38,7 @@ export const ProjectNav = ({ projectId }: ProjectNavProps) => {
             }`}
           >
             <Icon size={16} />
-            {item.label}
+            {t(item.key)}
           </Link>
         )
       })}

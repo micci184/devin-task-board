@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { Crown, Shield, User, Eye, Trash2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 import type { ProjectRole } from '@prisma/client'
@@ -31,12 +32,6 @@ interface MemberListProps {
   currentUserRole: ProjectRole
 }
 
-const roleLabels: Record<ProjectRole, string> = {
-  OWNER: 'オーナー',
-  ADMIN: '管理者',
-  MEMBER: 'メンバー',
-  VIEWER: '閲覧者',
-}
 
 const roleIcons: Record<ProjectRole, typeof Crown> = {
   OWNER: Crown,
@@ -52,14 +47,12 @@ const roleBadgeColors: Record<ProjectRole, string> = {
   VIEWER: 'bg-foreground/5 text-foreground/50',
 }
 
-const selectableRoles: { value: ProjectRole; label: string }[] = [
-  { value: 'ADMIN', label: '管理者' },
-  { value: 'MEMBER', label: 'メンバー' },
-  { value: 'VIEWER', label: '閲覧者' },
-]
+const selectableRoles: ProjectRole[] = ['ADMIN', 'MEMBER', 'VIEWER']
 
 export const MemberList = ({ members, currentUserId, currentUserRole }: MemberListProps) => {
   const router = useRouter()
+  const t = useTranslations('members')
+  const tCommon = useTranslations('common')
   const [loadingMemberId, setLoadingMemberId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
@@ -79,14 +72,14 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
       const json = await res.json()
 
       if (!res.ok) {
-        toast.error(json.error?.message ?? '権限の変更に失敗しました')
+        toast.error(json.error?.message ?? t('roleChangeError'))
         return
       }
 
-      toast.success(`${member.user.name} の権限を変更しました`)
+      toast.success(t('roleChangeSuccess', { name: member.user.name }))
       router.refresh()
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     } finally {
       setLoadingMemberId(null)
     }
@@ -101,15 +94,15 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
 
       if (!res.ok) {
         const json = await res.json()
-        toast.error(json.error?.message ?? 'メンバーの削除に失敗しました')
+        toast.error(json.error?.message ?? t('deleteError'))
         return
       }
 
-      toast.success(`${member.user.name} をプロジェクトから削除しました`)
+      toast.success(t('deleteSuccess', { name: member.user.name }))
       setConfirmDeleteId(null)
       router.refresh()
     } catch {
-      toast.error('ネットワークエラーが発生しました')
+      toast.error(tCommon('networkError'))
     } finally {
       setLoadingMemberId(null)
     }
@@ -136,7 +129,7 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
               <div>
                 <p className="text-sm font-medium text-foreground">
                   {member.user.name}
-                  {isSelf && <span className="ml-1 text-xs text-foreground/40">（自分）</span>}
+                  {isSelf && <span className="ml-1 text-xs text-foreground/40">{t('self')}</span>}
                 </p>
                 <p className="text-xs text-foreground/60">{member.user.email}</p>
               </div>
@@ -150,8 +143,8 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
                   disabled={isLoading}
                   className="rounded-md border border-foreground/20 bg-background px-2 py-1 text-xs font-medium text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                 >
-                  {selectableRoles.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+                  {selectableRoles.map((role) => (
+                    <option key={role} value={role}>{t(`roles.${role}`)}</option>
                   ))}
                 </select>
               ) : (
@@ -159,7 +152,7 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${roleBadgeColors[member.role]}`}
                 >
                   <Icon size={12} />
-                  {roleLabels[member.role]}
+                  {t(`roles.${member.role}`)}
                 </span>
               )}
 
@@ -172,14 +165,14 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
                         disabled={isLoading}
                         className="rounded-md bg-danger px-2 py-1 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                       >
-                        {isLoading ? '削除中...' : '確認'}
+                        {isLoading ? tCommon('deleting') : tCommon('confirm')}
                       </button>
                       <button
                         onClick={() => setConfirmDeleteId(null)}
                         disabled={isLoading}
                         className="rounded-md border border-foreground/20 px-2 py-1 text-xs font-medium text-foreground hover:bg-foreground/5 disabled:opacity-50"
                       >
-                        取消
+                        {tCommon('cancel')}
                       </button>
                     </div>
                   ) : (
@@ -187,7 +180,7 @@ export const MemberList = ({ members, currentUserId, currentUserRole }: MemberLi
                       onClick={() => setConfirmDeleteId(member.id)}
                       disabled={isLoading}
                       className="rounded-md p-1.5 text-foreground/40 hover:bg-danger/10 hover:text-danger disabled:opacity-50"
-                      title="メンバーを削除"
+                      title={t('deleteMember')}
                     >
                       <Trash2 size={14} />
                     </button>

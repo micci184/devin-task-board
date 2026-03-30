@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Pencil, Trash2, Check, X } from 'lucide-react'
 import { format } from 'date-fns'
+import { ja, enUS } from 'date-fns/locale'
+import { Pencil, Trash2, Check, X } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 import { MarkdownPreview } from '@/components/tasks/MarkdownPreview'
@@ -42,6 +44,9 @@ const CommentItem = ({
   onUpdated: (comment: CommentData) => void
   onDeleted: (commentId: string) => void
 }) => {
+  const t = useTranslations('comments')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(comment.content)
   const [isSaving, setIsSaving] = useState(false)
@@ -68,15 +73,15 @@ const CommentItem = ({
 
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error?.message ?? 'コメントの編集に失敗しました')
+        throw new Error(json.error?.message ?? t('editError'))
       }
 
       const json = await res.json()
       onUpdated(json.data)
-      toast.success('コメントを編集しました')
+      toast.success(t('editSuccess'))
       setEditing(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'コメントの編集に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('editError'))
     } finally {
       setIsSaving(false)
     }
@@ -91,13 +96,13 @@ const CommentItem = ({
 
       if (!res.ok && res.status !== 204) {
         const json = await res.json()
-        throw new Error(json.error?.message ?? 'コメントの削除に失敗しました')
+        throw new Error(json.error?.message ?? t('deleteError'))
       }
 
       onDeleted(comment.id)
-      toast.success('コメントを削除しました')
+      toast.success(t('deleteSuccess'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'コメントの削除に失敗しました')
+      toast.error(error instanceof Error ? error.message : t('deleteError'))
       setIsDeleting(false)
     }
   }
@@ -116,17 +121,17 @@ const CommentItem = ({
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{comment.author.name}</span>
           <span className="text-xs text-foreground/40">
-            {format(new Date(comment.createdAt), 'yyyy/MM/dd HH:mm')}
+            {format(new Date(comment.createdAt), 'yyyy/MM/dd HH:mm', { locale: locale === 'ja' ? ja : enUS })}
           </span>
           {isEdited && (
-            <span className="text-xs text-foreground/30">(編集済み)</span>
+            <span className="text-xs text-foreground/30">({t('edited')})</span>
           )}
           {isOwner && !editing && (
             <div className="ml-auto flex items-center gap-1">
               <button
                 onClick={() => setEditing(true)}
                 className="rounded p-1 text-foreground/30 transition-colors hover:bg-foreground/5 hover:text-foreground/60"
-                title="編集"
+                title={tCommon('edit')}
               >
                 <Pencil size={12} />
               </button>
@@ -134,7 +139,7 @@ const CommentItem = ({
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="rounded p-1 text-foreground/30 transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
-                title="削除"
+                title={tCommon('delete')}
               >
                 <Trash2 size={12} />
               </button>
@@ -159,7 +164,7 @@ const CommentItem = ({
                 className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 <Check size={12} />
-                {isSaving ? '保存中...' : '保存'}
+                {isSaving ? tCommon('saving') : tCommon('save')}
               </button>
               <button
                 onClick={handleCancel}
@@ -167,7 +172,7 @@ const CommentItem = ({
                 className="inline-flex items-center gap-1 rounded-md border border-foreground/20 px-3 py-1.5 text-xs font-medium text-foreground/60 hover:bg-foreground/5 disabled:opacity-50"
               >
                 <X size={12} />
-                キャンセル
+                {tCommon('cancel')}
               </button>
             </div>
           </div>
@@ -182,6 +187,7 @@ const CommentItem = ({
 }
 
 export const CommentList = ({ taskId, projectId, currentUserId, canEdit }: CommentListProps) => {
+  const t = useTranslations('comments')
   const [comments, setComments] = useState<CommentData[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -233,7 +239,7 @@ export const CommentList = ({ taskId, projectId, currentUserId, canEdit }: Comme
   return (
     <div className="space-y-4">
       {comments.length === 0 ? (
-        <p className="text-sm text-foreground/40">コメントはまだありません</p>
+        <p className="text-sm text-foreground/40">{t('empty')}</p>
       ) : (
         <div className="space-y-4">
           {comments.map((comment) => (

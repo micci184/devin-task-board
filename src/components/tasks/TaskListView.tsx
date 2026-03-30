@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { format } from 'date-fns'
+import { useTranslations } from 'next-intl'
 
 import {
   Table,
@@ -62,37 +63,27 @@ interface TaskListViewProps {
 type SortByField = 'taskNumber' | 'title' | 'status' | 'priority' | 'dueDate' | 'createdAt'
 type SortOrder = 'asc' | 'desc'
 
-const statusConfig: Record<TaskStatus, { label: string; className: string }> = {
-  BACKLOG: { label: 'Backlog', className: 'bg-foreground/10 text-foreground/60' },
-  TODO: { label: 'Todo', className: 'bg-primary/10 text-primary' },
-  IN_PROGRESS: { label: 'In Progress', className: 'bg-warning/10 text-warning' },
-  IN_REVIEW: { label: 'In Review', className: 'bg-primary/10 text-primary' },
-  DONE: { label: 'Done', className: 'bg-success/10 text-success' },
+const statusClassNames: Record<TaskStatus, string> = {
+  BACKLOG: 'bg-foreground/10 text-foreground/60',
+  TODO: 'bg-primary/10 text-primary',
+  IN_PROGRESS: 'bg-warning/10 text-warning',
+  IN_REVIEW: 'bg-primary/10 text-primary',
+  DONE: 'bg-success/10 text-success',
 }
 
-const priorityConfig: Record<Priority, { label: string; className: string }> = {
-  URGENT: { label: '緊急', className: 'bg-danger/10 text-danger' },
-  HIGH: { label: '高', className: 'bg-warning/10 text-warning' },
-  MEDIUM: { label: '中', className: 'bg-primary/10 text-primary' },
-  LOW: { label: '低', className: 'bg-foreground/10 text-foreground/60' },
-  NONE: { label: '-', className: 'bg-foreground/5 text-foreground/40' },
+const priorityClassNames: Record<Priority, string> = {
+  URGENT: 'bg-danger/10 text-danger',
+  HIGH: 'bg-warning/10 text-warning',
+  MEDIUM: 'bg-primary/10 text-primary',
+  LOW: 'bg-foreground/10 text-foreground/60',
+  NONE: 'bg-foreground/5 text-foreground/40',
 }
-
-const columns: { key: SortByField; label: string; sortable: boolean }[] = [
-  { key: 'taskNumber', label: '番号', sortable: true },
-  { key: 'title', label: 'タイトル', sortable: true },
-  { key: 'status', label: 'ステータス', sortable: true },
-  { key: 'priority', label: '優先度', sortable: true },
-  { key: 'createdAt', label: '担当者', sortable: false },
-  { key: 'dueDate', label: '期限', sortable: true },
-  { key: 'createdAt', label: 'カテゴリ', sortable: false },
-]
 
 const TableSkeleton = () => (
   <Table>
     <TableHeader>
       <TableRow>
-        {columns.map((col, i) => (
+        {Array.from({ length: 7 }).map((_, i) => (
           <TableHead key={i}>
             <Skeleton className="h-4 w-16" />
           </TableHead>
@@ -117,6 +108,10 @@ const TableSkeleton = () => (
 
 export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
   const router = useRouter()
+  const t = useTranslations('tasks')
+  const tStatus = useTranslations('status')
+  const tPriority = useTranslations('priority')
+  const tCommon = useTranslations('common')
   const [tasks, setTasks] = useState<TaskItem[]>([])
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -159,7 +154,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
         params.set('categoryIds', catIds.join(','))
       }
       const res = await fetch(`/api/projects/${projectId}/tasks?${params}`)
-      if (!res.ok) throw new Error('タスクの取得に失敗しました')
+      if (!res.ok) throw new Error(t('fetchError'))
       const json = await res.json()
       setTasks(json.data)
       setPagination(json.pagination)
@@ -228,7 +223,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
             }`}
           >
             <Filter size={14} />
-            カテゴリ
+            {t('categoryLabel')}
             {selectedCategoryIds.length > 0 && (
               <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
                 {selectedCategoryIds.length}
@@ -260,7 +255,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
                   onClick={clearCategoryFilter}
                   className="rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground/50 hover:text-foreground/80"
                 >
-                  クリア
+                  {tCommon('clear')}
                 </button>
               )}
             </div>
@@ -276,7 +271,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
                 onClick={() => handleSort('taskNumber')}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
-                番号
+                {t('numberColumn')}
                 <SortIcon field="taskNumber" />
               </button>
             </TableHead>
@@ -285,7 +280,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
                 onClick={() => handleSort('title')}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
-                タイトル
+                {t('titleLabel')}
                 <SortIcon field="title" />
               </button>
             </TableHead>
@@ -294,7 +289,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
                 onClick={() => handleSort('status')}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
-                ステータス
+                {t('statusLabel')}
                 <SortIcon field="status" />
               </button>
             </TableHead>
@@ -303,34 +298,34 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
                 onClick={() => handleSort('priority')}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
-                優先度
+                {t('priorityLabel')}
                 <SortIcon field="priority" />
               </button>
             </TableHead>
-            <TableHead>担当者</TableHead>
+            <TableHead>{tCommon('assignee')}</TableHead>
             <TableHead>
               <button
                 onClick={() => handleSort('dueDate')}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
-                期限
+                {tCommon('dueDate')}
                 <SortIcon field="dueDate" />
               </button>
             </TableHead>
-            <TableHead>カテゴリ</TableHead>
+            <TableHead>{t('categoryLabel')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {tasks.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="h-32 text-center text-foreground/40">
-                タスクがありません
+                {t('noTasks')}
               </TableCell>
             </TableRow>
           ) : (
             tasks.map((task) => {
-              const status = statusConfig[task.status]
-              const priority = priorityConfig[task.priority]
+              const statusClassName = statusClassNames[task.status]
+              const priorityClassName = priorityClassNames[task.priority]
               const dueDate = task.dueDate ? new Date(task.dueDate) : null
               const isOverdue = dueDate && task.status !== 'DONE' ? dueDate < new Date() : false
 
@@ -347,14 +342,14 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
                     {task.title}
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
-                      {status.label}
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClassName}`}>
+                      {tStatus(task.status)}
                     </span>
                   </TableCell>
                   <TableCell>
                     {task.priority !== 'NONE' && (
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${priority.className}`}>
-                        {priority.label}
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityClassName}`}>
+                        {tPriority(task.priority)}
                       </span>
                     )}
                   </TableCell>
@@ -408,15 +403,14 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
       {pagination.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between border-t border-foreground/10 px-2 pt-4">
           <p className="text-sm text-foreground/50">
-            {pagination.total} 件中 {(pagination.page - 1) * pagination.perPage + 1}–
-            {Math.min(pagination.page * pagination.perPage, pagination.total)} 件を表示
+            {t('paginationInfo', { total: pagination.total, from: (pagination.page - 1) * pagination.perPage + 1, to: Math.min(pagination.page * pagination.perPage, pagination.total) })}
           </p>
           <div className="flex items-center gap-1">
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
               className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-foreground/10 text-foreground/60 transition-colors hover:bg-foreground/5 disabled:pointer-events-none disabled:opacity-30"
-              aria-label="前のページ"
+              aria-label={t('previousPage')}
             >
               <ChevronLeft size={16} />
             </button>
@@ -453,7 +447,7 @@ export const TaskListView = ({ projectId, projectKey }: TaskListViewProps) => {
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
               className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-foreground/10 text-foreground/60 transition-colors hover:bg-foreground/5 disabled:pointer-events-none disabled:opacity-30"
-              aria-label="次のページ"
+              aria-label={t('nextPage')}
             >
               <ChevronRight size={16} />
             </button>

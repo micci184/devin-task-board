@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface MentionUser {
   id: string
@@ -16,6 +17,7 @@ interface CommentFormProps {
 }
 
 export const CommentForm = ({ taskId, projectId, onCommentAdded }: CommentFormProps) => {
+  const t = useTranslations('comments')
   const [content, setContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -126,13 +128,13 @@ export const CommentForm = ({ taskId, projectId, onCommentAdded }: CommentFormPr
 
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error?.message ?? 'コメントの投稿に失敗しました')
+        throw new Error(json.error?.message ?? t('submitError'))
       }
 
       setContent('')
       onCommentAdded()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'コメントの投稿に失敗しました')
+      setError(err instanceof Error ? err.message : t('submitError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -146,7 +148,7 @@ export const CommentForm = ({ taskId, projectId, onCommentAdded }: CommentFormPr
           value={content}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder="Markdown でコメントを入力... @でメンション"
+          placeholder={t('placeholder')}
           rows={3}
           maxLength={10000}
           disabled={isSubmitting}
@@ -185,7 +187,7 @@ export const CommentForm = ({ taskId, projectId, onCommentAdded }: CommentFormPr
           className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           <Send size={12} />
-          {isSubmitting ? '投稿中...' : 'コメント'}
+          {isSubmitting ? t('submitting') : t('submit')}
         </button>
       </div>
     </form>

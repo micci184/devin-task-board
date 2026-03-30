@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { getTranslations } from 'next-intl/server'
+
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { GanttChart } from '@/components/gantt/GanttChart'
@@ -58,7 +60,7 @@ const GanttPage = async ({ params }: GanttPageProps) => {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
-          <p className="text-sm text-foreground/60">ガントチャート</p>
+          <p className="text-sm text-foreground/60">{(await getTranslations('projects'))('ganttChart')}</p>
         </div>
       </div>
 

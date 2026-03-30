@@ -13,6 +13,7 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { Filter } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 import { KanbanColumn } from '@/components/board/KanbanColumn'
@@ -58,18 +59,16 @@ interface KanbanBoardProps {
   categories: CategoryItem[]
 }
 
-const columns: { status: TaskStatus; label: string }[] = [
-  { status: 'BACKLOG', label: 'Backlog' },
-  { status: 'TODO', label: 'Todo' },
-  { status: 'IN_PROGRESS', label: 'In Progress' },
-  { status: 'IN_REVIEW', label: 'In Review' },
-  { status: 'DONE', label: 'Done' },
-]
+const columnStatuses: TaskStatus[] = ['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']
 
 const SORT_ORDER_GAP = 1000
 
 export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: KanbanBoardProps) => {
   const router = useRouter()
+  const t = useTranslations('tasks')
+  const tStatus = useTranslations('status')
+  const tCommon = useTranslations('common')
+  const tBoard = useTranslations('board')
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
@@ -124,22 +123,22 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
 
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error?.message ?? 'タスクの作成に失敗しました')
+        throw new Error(json.error?.message ?? tBoard('createError'))
       }
 
       const json = await res.json()
       const created = json.data as Task
 
       setLocalTasks((prev) =>
-        prev.map((t) => (t.id === tempId ? { ...created, sortOrder: optimisticTask.sortOrder } : t)),
+        prev.map((item) => (item.id === tempId ? { ...created, sortOrder: optimisticTask.sortOrder } : item)),
       )
 
-      toast.success('タスクを作成しました')
+      toast.success(tBoard('createSuccess'))
       router.refresh()
     } catch (error) {
-      setLocalTasks((prev) => prev.filter((t) => t.id !== tempId))
+      setLocalTasks((prev) => prev.filter((item) => item.id !== tempId))
       toast.error(
-        error instanceof Error ? error.message : 'タスクの作成に失敗しました',
+        error instanceof Error ? error.message : tBoard('createError'),
       )
     }
   }
@@ -161,10 +160,8 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
     const activeTaskItem = localTasks.find((t) => t.id === activeId)
     if (!activeTaskItem) return
 
-    const validStatuses = columns.map((c) => c.status)
-
     let overStatus: TaskStatus | undefined
-    if (validStatuses.includes(overId as TaskStatus)) {
+    if (columnStatuses.includes(overId as TaskStatus)) {
       overStatus = overId as TaskStatus
     } else {
       const overTask = localTasks.find((t) => t.id === overId)
@@ -211,7 +208,6 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
       return
     }
 
-    const validStatuses = columns.map((c) => c.status)
     const originalStatus = dragOriginalStatusRef.current
     const currentStatus = originalStatus ?? task.status
     dragOriginalStatusRef.current = null
@@ -221,7 +217,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
       return
     }
 
-    const isOverColumn = validStatuses.includes(overId as TaskStatus)
+    const isOverColumn = columnStatuses.includes(overId as TaskStatus)
     const overTask = !isOverColumn ? localTasks.find((t) => t.id === overId) : null
 
     const targetStatus = isOverColumn
@@ -263,7 +259,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
             }).then(async (res) => {
               if (!res.ok) {
                 const json = await res.json()
-                throw new Error(json.error?.message ?? '並び順の更新に失敗しました')
+                throw new Error(json.error?.message ?? tBoard('sortError'))
               }
             }),
           ),
@@ -272,7 +268,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
       } catch (error) {
         setLocalTasks(previousTasks)
         toast.error(
-          error instanceof Error ? error.message : '並び順の更新に失敗しました',
+          error instanceof Error ? error.message : tBoard('sortError'),
         )
       }
       return
@@ -326,7 +322,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
             }).then(async (res) => {
               if (!res.ok) {
                 const json = await res.json()
-                throw new Error(json.error?.message ?? 'ステータスの更新に失敗しました')
+                throw new Error(json.error?.message ?? tBoard('statusError'))
               }
             }),
           ),
@@ -335,7 +331,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
       } catch (error) {
         setLocalTasks(tasks)
         toast.error(
-          error instanceof Error ? error.message : 'ステータスの更新に失敗しました',
+          error instanceof Error ? error.message : tBoard('statusError'),
         )
       }
     }
@@ -374,7 +370,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
             }`}
           >
             <Filter size={14} />
-            カテゴリ
+            {t('categoryLabel')}
             {selectedCategoryIds.length > 0 && (
               <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
                 {selectedCategoryIds.length}
@@ -406,7 +402,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
                   onClick={() => setSelectedCategoryIds([])}
                   className="rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground/50 hover:text-foreground/80"
                 >
-                  クリア
+                  {tCommon('clear')}
                 </button>
               )}
             </div>
@@ -423,12 +419,12 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
         onDragCancel={handleDragCancel}
       >
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {columns.map((col) => (
+          {columnStatuses.map((status) => (
             <KanbanColumn
-              key={col.status}
-              status={col.status}
-              label={col.label}
-              tasks={filteredTasks.filter((t) => t.status === col.status).sort((a, b) => a.sortOrder - b.sortOrder)}
+              key={status}
+              status={status}
+              label={tStatus(status)}
+              tasks={filteredTasks.filter((item) => item.status === status).sort((a, b) => a.sortOrder - b.sortOrder)}
               projectKey={projectKey}
               onQuickCreate={handleQuickCreate}
               activeTaskId={activeTaskId}

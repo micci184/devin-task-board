@@ -1,19 +1,13 @@
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { useTranslations } from 'next-intl'
 
 type PriorityChartItem = {
   priority: string
   count: number
 }
 
-const PRIORITY_LABELS: Record<string, string> = {
-  URGENT: '緊急',
-  HIGH: '高',
-  MEDIUM: '中',
-  LOW: '低',
-  NONE: 'なし',
-}
 
 const PRIORITY_COLORS: Record<string, string> = {
   URGENT: '#ef4444',
@@ -28,10 +22,12 @@ type Props = {
 }
 
 export const PriorityPieChart = ({ data }: Props) => {
+  const tPriority = useTranslations('priority')
+  const tDashboard = useTranslations('dashboard')
   const chartData = data
     .filter((item) => item.count > 0)
     .map((item) => ({
-      name: PRIORITY_LABELS[item.priority] ?? item.priority,
+      name: tPriority(item.priority as 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE'),
       value: item.count,
       color: PRIORITY_COLORS[item.priority] ?? '#94a3b8',
     }))
@@ -39,9 +35,9 @@ export const PriorityPieChart = ({ data }: Props) => {
   if (chartData.length === 0) {
     return (
       <div className="rounded-lg border border-foreground/10 bg-background p-5">
-        <h3 className="mb-4 text-sm font-semibold text-foreground">優先度別タスク数</h3>
+        <h3 className="mb-4 text-sm font-semibold text-foreground">{tDashboard('priorityChart')}</h3>
         <div className="flex h-64 items-center justify-center text-sm text-foreground/40">
-          データがありません
+          {tDashboard('noData')}
         </div>
       </div>
     )
@@ -49,7 +45,7 @@ export const PriorityPieChart = ({ data }: Props) => {
 
   return (
     <div className="rounded-lg border border-foreground/10 bg-background p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">優先度別タスク数</h3>
+      <h3 className="mb-4 text-sm font-semibold text-foreground">{tDashboard('priorityChart')}</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>

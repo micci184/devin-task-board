@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { getTranslations } from 'next-intl/server'
+
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { ProjectSettingsForm } from '@/components/projects/ProjectSettingsForm'
@@ -63,6 +65,10 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
   const isAdmin = membership.role === 'OWNER' || membership.role === 'ADMIN'
   const canManageCategories = true
 
+  const t = await getTranslations('projects')
+  const tMembers = await getTranslations('members')
+  const tCategories = await getTranslations('categories')
+
   const serializedMembers = members.map((m) => ({
     id: m.id,
     projectId: m.projectId,
@@ -81,8 +87,8 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">プロジェクト設定</h1>
-        <p className="text-sm text-foreground/60">{project.name} の設定</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('settingsTitle')}</h1>
+        <p className="text-sm text-foreground/60">{t('settingsDescription', { name: project.name })}</p>
       </div>
 
       <div className="mb-6">
@@ -101,11 +107,11 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
         {isAdmin && (
           <section>
             <h2 className="mb-4 text-lg font-semibold text-foreground">
-              メンバー（{members.length}人）
+              {tMembers('title', { count: members.length })}
             </h2>
 
             <div className="mb-6 rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
-              <h3 className="mb-3 text-sm font-medium text-foreground">メンバーを招待</h3>
+              <h3 className="mb-3 text-sm font-medium text-foreground">{tMembers('invite')}</h3>
               <InviteMemberForm projectId={projectId} />
             </div>
 
@@ -119,12 +125,12 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
 
         <section>
           <h2 className="mb-4 text-lg font-semibold text-foreground">
-            カテゴリ（{categories.length}件）
+            {tCategories('title', { count: categories.length })}
           </h2>
 
           {canManageCategories && (
             <div className="mb-6 rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4">
-              <h3 className="mb-3 text-sm font-medium text-foreground">カテゴリを追加</h3>
+              <h3 className="mb-3 text-sm font-medium text-foreground">{tCategories('addCategory')}</h3>
               <CategoryForm projectId={projectId} />
             </div>
           )}
