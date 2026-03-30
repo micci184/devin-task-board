@@ -261,13 +261,13 @@ export const GanttChart = ({
 
   // Build flat row list for rendering
   const rows = useMemo(() => {
-    const result: Array<{ type: 'group'; group: TaskGroup } | { type: 'task'; task: GanttTask }> = []
+    const result: Array<{ type: 'group'; group: TaskGroup } | { type: 'task'; task: GanttTask; groupKey: string }> = []
     for (const group of groups) {
       if (groupBy !== 'none') {
         result.push({ type: 'group', group })
       }
       for (const task of group.tasks) {
-        result.push({ type: 'task', task })
+        result.push({ type: 'task', task, groupKey: group.key })
       }
     }
     return result
@@ -621,7 +621,7 @@ export const GanttChart = ({
                 const task = row.task
                 return (
                   <div
-                    key={task.id}
+                    key={`${row.groupKey}-${task.id}`}
                     className="flex items-center gap-2 border-b border-foreground/5 px-3 text-xs hover:bg-foreground/[0.02]"
                     style={{ height: TASK_ROW_HEIGHT }}
                   >
@@ -750,7 +750,7 @@ export const GanttChart = ({
 
                   return (
                     <div
-                      key={`gantt-task-${task.id}`}
+                      key={`gantt-task-${row.groupKey}-${task.id}`}
                       className="relative border-b border-foreground/5"
                       style={{ height: TASK_ROW_HEIGHT }}
                     >
