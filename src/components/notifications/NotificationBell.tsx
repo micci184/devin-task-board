@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl'
 
 import { Bell } from 'lucide-react'
 
+export const NOTIFICATION_READ_CHANGED_EVENT = 'notification-read-changed'
+
 export const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0)
   const t = useTranslations('nav')
@@ -25,7 +27,16 @@ export const NotificationBell = () => {
     fetchUnreadCount()
 
     const interval = setInterval(fetchUnreadCount, 30000)
-    return () => clearInterval(interval)
+
+    const handleReadChanged = () => {
+      fetchUnreadCount()
+    }
+    window.addEventListener(NOTIFICATION_READ_CHANGED_EVENT, handleReadChanged)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener(NOTIFICATION_READ_CHANGED_EVENT, handleReadChanged)
+    }
   }, [])
 
   return (

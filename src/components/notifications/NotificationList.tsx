@@ -13,10 +13,13 @@ import {
   ArrowRightLeft,
   Clock,
   AtSign,
+  Mail,
+  MailOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Skeleton } from '@/components/ui/skeleton'
+import { NOTIFICATION_READ_CHANGED_EVENT } from '@/components/notifications/NotificationBell'
 
 import type { NotificationType } from '@prisma/client'
 
@@ -89,17 +92,26 @@ export const NotificationList = ({
     fetchNotifications(1, newFilter)
   }
 
-  const handleMarkAsRead = async (id: string) => {
+  const dispatchReadChanged = () => {
+    window.dispatchEvent(new Event(NOTIFICATION_READ_CHANGED_EVENT))
+  }
+
+  const handleToggleRead = async (id: string, isRead: boolean) => {
     try {
-      const res = await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' })
+      const res = await fetch(`/api/notifications/${id}/read`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isRead }),
+      })
       if (!res.ok) {
         toast.error('既読の更新に失敗しました')
         return
       }
 
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+        prev.map((n) => (n.id === id ? { ...n, isRead } : n)),
       )
+      dispatchReadChanged()
     } catch {
       toast.error('ネットワークエラーが発生しました')
     }
@@ -115,6 +127,7 @@ export const NotificationList = ({
       }
 
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+      dispatchReadChanged()
       toast.success('すべての通知を既読にしました')
     } catch {
       toast.error('ネットワークエラーが発生しました')
@@ -125,7 +138,7 @@ export const NotificationList = ({
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
-      await handleMarkAsRead(notification.id)
+      await handleToggleRead(notification.id, true)
     }
     if (notification.linkUrl) {
       router.push(notification.linkUrl)
@@ -183,43 +196,60 @@ export const NotificationList = ({
           {notifications.map((notification) => {
             const Icon = notificationIcons[notification.type]
             return (
-              <button
+              <div
                 key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-foreground/5 ${
+                className={`flex w-full items-start gap-3 px-4 py-3 transition-colors ${
                   !notification.isRead ? 'bg-primary/5' : ''
                 }`}
               >
-                <div
-                  className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                    !notification.isRead
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-foreground/5 text-foreground/40'
-                  }`}
+                <button
+                  onClick={() => handleNotificationClick(notification)}
+                  className="flex min-w-0 flex-1 items-start gap-3 text-left hover:opacity-80"
                 >
-                  <Icon size={16} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p
-                      className={`truncate text-sm ${
-                        !notification.isRead ? 'font-medium text-foreground' : 'text-foreground/80'
-                      }`}
-                    >
-                      {notification.title}
-                    </p>
-                    {!notification.isRead && (
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    )}
+                  <div
+                    className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                      !notification.isRead
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-foreground/5 text-foreground/40'
+                    }`}
+                  >
+                    <Icon size={16} />
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-foreground/60">
-                    {notification.message}
-                  </p>
-                  <p className="mt-1 text-xs text-foreground/40">
-                    {format(new Date(notification.createdAt), 'yyyy年M月d日 HH:mm', { locale: ja })}
-                  </p>
-                </div>
-              </button>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p
+                        className={`truncate text-sm ${
+                          !notification.isRead ? 'font-medium text-foreground' : 'text-foreground/80'
+                        }`}
+                      >
+                        {notification.title}
+                      </p>
+                      {!notification.isRead && (
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-foreground/60">
+                      {notification.message}
+                    </p>
+                    <p className="mt-1 text-xs text-foreground/40">
+                      {format(new Date(notification.createdAt), 'yyyy年M月d日 HH:mm', { locale: ja })}
+                    </p>
+                  </div>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleToggleRead(notification.id, !notification.isRead)
+                  }}
+                  className="mt-1 flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs text-foreground/50 transition-colors hover:bg-foreground/5 hover:text-foreground"
+                  title={notification.isRead ? '未読にする' : '既読にする'}
+                >
+                  {notification.isRead ? <Mail size={14} /> : <MailOpen size={14} />}
+                  <span className="hidden sm:inline">
+                    {notification.isRead ? '未読にする' : '既読にする'}
+                  </span>
+                </button>
+              </div>
             )
           })}
         </div>
