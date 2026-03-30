@@ -90,7 +90,8 @@
     "openFilter": "フィルターを開く",
     "dueDateFrom": "開始日",
     "dueDateTo": "終了日",
-    "dueDate": "期日"
+    "dueDate": "期日",
+    "resultsCount": "{count}件の結果"
   },
   "settings": {
     "title": "プロフィール設定",

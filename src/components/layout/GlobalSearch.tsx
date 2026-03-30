@@ -587,7 +587,7 @@ export const GlobalSearch = () => {
           ) : results.length > 0 ? (
             <div className="py-1">
               <div className="px-3 py-1.5 text-xs font-medium text-foreground/40">
-                {results.length}
+                {tSearch('resultsCount', { count: results.length })}
               </div>
               {results.map((task) => (
                 <button

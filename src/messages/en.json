@@ -90,7 +90,8 @@
     "openFilter": "Open filter",
     "dueDateFrom": "From",
     "dueDateTo": "To",
-    "dueDate": "Due date"
+    "dueDate": "Due date",
+    "resultsCount": "{count} results"
   },
   "settings": {
     "title": "Profile Settings",
