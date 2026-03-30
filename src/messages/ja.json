@@ -303,6 +303,7 @@
     "estimatedHours": "見積もり工数",
     "actualHours": "実績工数",
     "statusLabel": "ステータス",
+    "assigneeLabel": "担当者",
     "prioritySidebar": "優先度",
     "categoryUpdateSuccess": "カテゴリを更新しました",
     "categoryUpdateError": "カテゴリの更新に失敗しました",
@@ -394,7 +395,7 @@
       "fieldChanged": "を変更:",
       "actionDone": "タスクを{action}しました"
     },
-    "feedMessage": "{user} が {entity} を {action} しました",
+    "feedMessage": "が {entity} を {action} しました",
     "paginationInfo": "{total}件中 {from}〜{to}件",
     "prevPage": "前のページ",
     "nextPage": "次のページ"

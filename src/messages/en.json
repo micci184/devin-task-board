@@ -303,6 +303,7 @@
     "estimatedHours": "Estimated Hours",
     "actualHours": "Actual Hours",
     "statusLabel": "Status",
+    "assigneeLabel": "Assignee",
     "prioritySidebar": "Priority",
     "categoryUpdateSuccess": "Category updated",
     "categoryUpdateError": "Failed to update category",
@@ -394,7 +395,7 @@
       "fieldChanged": "changed:",
       "actionDone": "Task {action}"
     },
-    "feedMessage": "{user} {action} {entity}",
+    "feedMessage": "{action} {entity}",
     "paginationInfo": "{from}-{to} of {total}",
     "prevPage": "Previous page",
     "nextPage": "Next page"
