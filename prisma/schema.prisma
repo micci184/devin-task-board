@@ -66,10 +66,11 @@ model User {
   password       String
   avatarUrl      String?
   role           Role            @default(MEMBER)
-  locale         String          @default("ja")
-  theme          Theme           @default(SYSTEM)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  locale            String           @default("ja")
+  theme             Theme            @default(SYSTEM)
+  emailNotification Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
   ownedProjects  Project[]       @relation("ProjectOwner")
   projectMembers ProjectMember[]
   assignedTasks  Task[]          @relation("TaskAssignee")

@@ -14,6 +14,7 @@ interface UserProfile {
   avatarUrl: string | null;
   locale: string;
   theme: string;
+  emailNotification: boolean;
 }
 
 const ProfileSettingsPage = () => {
@@ -23,6 +24,7 @@ const ProfileSettingsPage = () => {
   const [name, setName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [locale, setLocale] = useState<Locale>("ja");
+  const [emailNotification, setEmailNotification] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +38,7 @@ const ProfileSettingsPage = () => {
         setName(json.data.name);
         setAvatarUrl(json.data.avatarUrl ?? "");
         setLocale(json.data.locale as Locale);
+        setEmailNotification(json.data.emailNotification);
       } catch {
         // ignore
       } finally {
@@ -55,6 +58,7 @@ const ProfileSettingsPage = () => {
           name: name.trim(),
           avatarUrl: avatarUrl.trim() || null,
           locale,
+          emailNotification,
         }),
       });
 
@@ -157,6 +161,43 @@ const ProfileSettingsPage = () => {
             <option value="ja">{t("japanese")}</option>
             <option value="en">{t("english")}</option>
           </select>
+        </div>
+      </section>
+
+      <section className="space-y-6 rounded-lg border border-foreground/10 bg-background p-6">
+        <h2 className="text-sm font-semibold text-foreground">
+          {t("notificationSection")}
+        </h2>
+
+        {/* メール通知設定 */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <label
+              htmlFor="emailNotification"
+              className="text-sm font-medium text-foreground/70"
+            >
+              {t("emailNotification")}
+            </label>
+            <p className="text-xs text-foreground/50">
+              {t("emailNotificationDescription")}
+            </p>
+          </div>
+          <button
+            id="emailNotification"
+            type="button"
+            role="switch"
+            aria-checked={emailNotification}
+            onClick={() => setEmailNotification(!emailNotification)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+              emailNotification ? "bg-primary" : "bg-foreground/20"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${
+                emailNotification ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </section>
 
