@@ -13,11 +13,11 @@ type TaskItem = {
 }
 
 const PRIORITY_BADGE: Record<string, { label: string; className: string }> = {
-  URGENT: { label: '緊急', className: 'bg-red-100 text-red-700' },
-  HIGH: { label: '高', className: 'bg-orange-100 text-orange-700' },
-  MEDIUM: { label: '中', className: 'bg-yellow-100 text-yellow-700' },
-  LOW: { label: '低', className: 'bg-green-100 text-green-700' },
-  NONE: { label: 'なし', className: 'bg-gray-100 text-gray-600' },
+  URGENT: { label: '緊急', className: 'bg-danger/10 text-danger' },
+  HIGH: { label: '高', className: 'bg-warning/10 text-warning' },
+  MEDIUM: { label: '中', className: 'bg-primary/10 text-primary' },
+  LOW: { label: '低', className: 'bg-success/10 text-success' },
+  NONE: { label: 'なし', className: 'bg-foreground/10 text-foreground/60' },
 }
 
 type Props = {

@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
+import type { Theme } from "@prisma/client";
 import {
   Sun,
   Moon,
@@ -109,10 +110,15 @@ export const Header = () => {
                 return (
                   <button
                     key={option.value}
-                    onClick={() => {
-                      setTheme(option.value);
-                      setShowThemeMenu(false);
-                    }}
+                      onClick={() => {
+                        setTheme(option.value);
+                        setShowThemeMenu(false);
+                        fetch("/api/users/me", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ theme: option.value.toUpperCase() as Theme }),
+                        }).catch(() => {});
+                      }}
                     className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
                       theme === option.value
                         ? "text-primary"
