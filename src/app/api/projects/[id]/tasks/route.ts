@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { createTaskSchema } from '@/lib/validations/task'
+import { notifyTaskAssigned } from '@/lib/notifications'
 
 import type { NextRequest } from 'next/server'
 
@@ -178,6 +179,19 @@ export const POST = async (
           taskCategories: { include: { category: true } },
         },
       })
+
+      // 通知トリガー: タスク作成時のアサイン
+      if (created.assigneeId && created.assigneeId !== session.user.id) {
+        await notifyTaskAssigned(tx, {
+          assigneeId: created.assigneeId,
+          assignerUserId: session.user.id,
+          assignerName: session.user.name ?? '',
+          taskKey: `${project.key}-${created.taskNumber}`,
+          taskTitle: created.title,
+          projectId,
+          taskId: created.id,
+        })
+      }
 
       return created
     })
