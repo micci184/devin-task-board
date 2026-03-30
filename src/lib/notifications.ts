@@ -1,3 +1,5 @@
+import { sendNotificationEmail, sendNotificationEmails } from '@/lib/email'
+
 import type { PrismaClient } from '@prisma/client'
 import type { NotificationType } from '@prisma/client'
 
@@ -15,13 +17,42 @@ type CreateNotificationParams = {
 }
 
 /**
+ * ユーザーのメール通知設定とメールアドレス・ロケールを取得する
+ */
+const getUserEmailSettings = async (
+  tx: TransactionClient,
+  userId: string,
+): Promise<{ email: string; locale: string; emailNotification: boolean } | null> => {
+  const user = await tx.user.findUnique({
+    where: { id: userId },
+    select: { email: true, locale: true, emailNotification: true },
+  })
+  return user
+}
+
+/**
+ * 複数ユーザーのメール通知設定を一括取得する
+ */
+const getUsersEmailSettings = async (
+  tx: TransactionClient,
+  userIds: string[],
+): Promise<Map<string, { email: string; locale: string; emailNotification: boolean }>> => {
+  if (userIds.length === 0) return new Map()
+  const users = await tx.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, email: true, locale: true, emailNotification: true },
+  })
+  return new Map(users.map((u) => [u.id, { email: u.email, locale: u.locale, emailNotification: u.emailNotification }]))
+}
+
+/**
  * 通知を1件作成する
  */
 export const createNotification = async (
   tx: TransactionClient,
   params: CreateNotificationParams,
 ) => {
-  return tx.notification.create({
+  const notification = await tx.notification.create({
     data: {
       type: params.type,
       title: params.title,
@@ -30,6 +61,23 @@ export const createNotification = async (
       linkUrl: params.linkUrl ?? null,
     },
   })
+
+  // メール通知を非同期で送信（失敗してもアプリ内通知には影響しない）
+  const userSettings = await getUserEmailSettings(tx, params.userId)
+  if (userSettings?.emailNotification) {
+    sendNotificationEmail({
+      to: userSettings.email,
+      type: params.type,
+      title: params.title,
+      message: params.message,
+      linkUrl: params.linkUrl,
+      locale: userSettings.locale,
+    }).catch(() => {
+      // エラーは sendNotificationEmail 内でログ済み
+    })
+  }
+
+  return notification
 }
 
 /**
@@ -40,7 +88,8 @@ export const createNotifications = async (
   notifications: CreateNotificationParams[],
 ) => {
   if (notifications.length === 0) return
-  return tx.notification.createMany({
+
+  const result = await tx.notification.createMany({
     data: notifications.map((n) => ({
       type: n.type,
       title: n.title,
@@ -49,6 +98,35 @@ export const createNotifications = async (
       linkUrl: n.linkUrl ?? null,
     })),
   })
+
+  // メール通知を非同期で送信
+  const userIds = [...new Set(notifications.map((n) => n.userId))]
+  const usersMap = await getUsersEmailSettings(tx, userIds)
+
+  const emailParams = notifications
+    .filter((n) => {
+      const user = usersMap.get(n.userId)
+      return user?.emailNotification
+    })
+    .map((n) => {
+      const user = usersMap.get(n.userId)!
+      return {
+        to: user.email,
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        linkUrl: n.linkUrl,
+        locale: user.locale,
+      }
+    })
+
+  if (emailParams.length > 0) {
+    sendNotificationEmails(emailParams).catch(() => {
+      // エラーは sendNotificationEmails 内でログ済み
+    })
+  }
+
+  return result
 }
 
 /**

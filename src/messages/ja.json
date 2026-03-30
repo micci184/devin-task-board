@@ -109,7 +109,10 @@
     "saveSuccess": "設定を保存しました",
     "saveError": "設定の保存に失敗しました",
     "avatarUrl": "アバターURL",
-    "avatarUrlPlaceholder": "https://example.com/avatar.png"
+    "avatarUrlPlaceholder": "https://example.com/avatar.png",
+    "notificationSection": "通知設定",
+    "emailNotification": "メール通知",
+    "emailNotificationDescription": "タスクの更新やコメントなどの通知をメールでも受け取ります"
   },
   "date": {
     "format": "yyyy年MM月dd日"
