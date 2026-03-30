@@ -15,6 +15,7 @@ const updateProfileSchema = z.object({
   avatarUrl: z.string().url().nullable().optional(),
   locale: z.enum(locales).optional(),
   theme: z.enum(themeValues).optional(),
+  emailNotification: z.boolean().optional(),
 });
 
 export const GET = async () => {
@@ -37,6 +38,7 @@ export const GET = async () => {
         role: true,
         locale: true,
         theme: true,
+        emailNotification: true,
         createdAt: true,
       },
     });
@@ -99,6 +101,7 @@ export const PATCH = async (request: NextRequest) => {
         role: true,
         locale: true,
         theme: true,
+        emailNotification: true,
         createdAt: true,
       },
     });
