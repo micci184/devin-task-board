@@ -35,18 +35,18 @@ interface Pagination {
 }
 
 
-const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: ActivityItem; t: ReturnType<typeof useTranslations<'activity'>>; tStatus: ReturnType<typeof useTranslations<'dashboardStatus'>>; tPriority: ReturnType<typeof useTranslations<'tasks'>> }) => {
+const ActivityDetail = ({ activity, t, tStatus, tPriority, tCommon }: { activity: ActivityItem; t: ReturnType<typeof useTranslations<'activity'>>; tStatus: ReturnType<typeof useTranslations<'dashboardStatus'>>; tPriority: ReturnType<typeof useTranslations<'priority'>>; tCommon: ReturnType<typeof useTranslations<'common'>> }) => {
   const { action, oldValue, newValue } = activity
 
   const FIELD_LABELS: Record<string, string> = {
-    title: t('field.title'),
-    description: t('field.description'),
-    status: t('field.status'),
-    priority: t('field.priority'),
-    assigneeId: t('field.assignee'),
-    dueDate: t('field.dueDate'),
-    estimatedHours: t('field.estimatedHours'),
-    actualHours: t('field.actualHours'),
+    title: t('fields.title'),
+    description: t('fields.description'),
+    status: t('fields.status'),
+    priority: t('fields.priority'),
+    assigneeId: t('fields.assigneeId'),
+    dueDate: t('fields.dueDate'),
+    estimatedHours: t('fields.estimatedHours'),
+    actualHours: t('fields.actualHours'),
   }
 
   const getStatusLabel = (status: string) => {
@@ -59,7 +59,7 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
 
   const getPriorityLabel = (priority: string) => {
     try {
-      return tPriority(`priority.${priority}` as 'priority.URGENT' | 'priority.HIGH' | 'priority.MEDIUM' | 'priority.LOW' | 'priority.NONE')
+      return tPriority(priority as 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE')
     } catch {
       return priority
     }
@@ -67,14 +67,14 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
 
   const getEntityLabel = (entityType: string) => {
     try {
-      return t(`entity.${entityType}` as 'entity.task' | 'entity.comment' | 'entity.project')
+      return t(`entities.${entityType}` as 'entities.task' | 'entities.comment' | 'entities.project')
     } catch {
       return entityType
     }
   }
 
   const formatFieldValue = (field: string, value: unknown): string => {
-    if (value === null || value === undefined) return t('unset')
+    if (value === null || value === undefined) return tCommon('unset')
     if (field === 'status') return getStatusLabel(String(value))
     if (field === 'priority') return getPriorityLabel(String(value))
     if (field === 'dueDate') {
@@ -83,7 +83,7 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
       return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
     }
     if (field === 'estimatedHours' || field === 'actualHours') return `${value}h`
-    if (field === 'assigneeId') return String(value) || t('unassigned')
+    if (field === 'assigneeId') return String(value) || tCommon('unassigned')
     if (field === 'description') {
       const str = String(value)
       return str.length > 50 ? `${str.substring(0, 50)}...` : str
@@ -95,7 +95,7 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
     const taskKey = newValue?.taskKey as string | undefined
     return (
       <span className="text-foreground/60">
-        {taskKey ? t('detail.createdWithKey', { key: taskKey }) : t('detail.created', { entity: getEntityLabel(activity.entityType) })}
+        {taskKey ? t('detail.createdTask', { key: taskKey }) : t('detail.createdTaskGeneric')}
       </span>
     )
   }
@@ -104,7 +104,7 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
     const taskKey = oldValue?.taskKey as string | undefined
     return (
       <span className="text-foreground/60">
-        {taskKey ? t('detail.deletedWithKey', { key: taskKey }) : t('detail.deleted', { entity: getEntityLabel(activity.entityType) })}
+        {taskKey ? t('detail.deletedTask', { key: taskKey }) : t('detail.deletedTaskGeneric')}
       </span>
     )
   }
@@ -115,9 +115,9 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
     return (
       <span className="text-foreground/60">
         {t('detail.statusChanged')}{' '}
-        <span className="font-medium text-foreground">{getStatusLabel(oldStatus ?? '')}</span>
+        <span className="font-medium text-foreground">{oldStatus ? getStatusLabel(oldStatus) : ''}</span>
         {' → '}
-        <span className="font-medium text-foreground">{getStatusLabel(newStatus ?? '')}</span>
+        <span className="font-medium text-foreground">{newStatus ? getStatusLabel(newStatus) : ''}</span>
       </span>
     )
   }
@@ -165,7 +165,7 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
     }
 
     if (changes.length === 0) {
-      return <span className="text-foreground/60">{t('detail.updated')}</span>
+      return <span className="text-foreground/60">{t('detail.updatedTask')}</span>
     }
 
     return (
@@ -183,10 +183,10 @@ const ActivityDetail = ({ activity, t, tStatus, tPriority }: { activity: Activit
     )
   }
 
-  const actionLabel = t(`action.${action}` as 'action.CREATED' | 'action.UPDATED' | 'action.DELETED' | 'action.STATUS_CHANGED' | 'action.ASSIGNED' | 'action.COMMENTED' | 'action.ATTACHED')
+  const actionLabel = t(`actions.${action}` as 'actions.CREATED' | 'actions.UPDATED' | 'actions.DELETED' | 'actions.STATUS_CHANGED' | 'actions.ASSIGNED' | 'actions.COMMENTED' | 'actions.ATTACHED')
   return (
     <span className="text-foreground/60">
-      {t('activityMessage', { entity: getEntityLabel(activity.entityType), action: actionLabel })}
+      {t('detail.actionDone', { action: actionLabel })}
     </span>
   )
 }
@@ -198,7 +198,8 @@ interface ProjectActivityFeedProps {
 export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => {
   const t = useTranslations('activity')
   const tStatus = useTranslations('dashboardStatus')
-  const tPriority = useTranslations('tasks')
+  const tPriority = useTranslations('priority')
+  const tCommon = useTranslations('common')
   const locale = useLocale()
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [pagination, setPagination] = useState<Pagination | null>(null)
@@ -257,7 +258,7 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Activity size={48} className="mb-3 text-foreground/20" />
-        <p className="text-sm text-foreground/40">{t('noActivity')}</p>
+        <p className="text-sm text-foreground/40">{t('empty')}</p>
       </div>
     )
   }
@@ -283,7 +284,7 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
                 <span className="font-medium text-foreground">{activity.user.name}</span>
               </div>
               <div className="mt-0.5 text-sm">
-                <ActivityDetail activity={activity} t={t} tStatus={tStatus} tPriority={tPriority} />
+                <ActivityDetail activity={activity} t={t} tStatus={tStatus} tPriority={tPriority} tCommon={tCommon} />
               </div>
               <p className="mt-1 text-xs text-foreground/40">
                 {formatDistanceToNow(new Date(activity.createdAt), {
@@ -299,7 +300,7 @@ export const ProjectActivityFeed = ({ projectId }: ProjectActivityFeedProps) => 
       {pagination && pagination.totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between border-t border-foreground/10 pt-4">
           <p className="text-xs text-foreground/40">
-            {t('paginationInfo', { total: pagination.total, start: (pagination.page - 1) * pagination.perPage + 1, end: Math.min(pagination.page * pagination.perPage, pagination.total) })}
+            {t('paginationInfo', { total: pagination.total, from: (pagination.page - 1) * pagination.perPage + 1, to: Math.min(pagination.page * pagination.perPage, pagination.total) })}
           </p>
           <div className="flex items-center gap-2">
             <button

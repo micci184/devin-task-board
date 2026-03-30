@@ -41,7 +41,7 @@ export const ProjectDeleteSection = ({
   return (
     <>
       <div className="rounded-lg border border-danger/30 p-6">
-        <h2 className="mb-2 text-lg font-semibold text-danger">{t('dangerZone')}</h2>
+        <h2 className="mb-2 text-lg font-semibold text-danger">{t('deleteSection')}</h2>
         <p className="mb-4 text-sm text-foreground/60">
           {t('deleteWarning')}
         </p>
@@ -64,7 +64,7 @@ export const ProjectDeleteSection = ({
               {t('deleteConfirm', { name: projectName })}
             </p>
             <p className="mt-3 text-sm text-foreground/60">
-              {t('deleteConfirmInput')}
+              {t('deleteInputLabel')}
             </p>
             {error && (
               <div className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">

@@ -76,7 +76,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const taskKey = newValue?.taskKey as string | undefined
     return (
       <span className="text-foreground/60">
-        {taskKey ? t('createdWithKey', { key: taskKey }) : t('created')}
+        {taskKey ? t('detail.createdTask', { key: taskKey }) : t('detail.createdTaskGeneric')}
       </span>
     )
   }
@@ -85,7 +85,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const taskKey = oldValue?.taskKey as string | undefined
     return (
       <span className="text-foreground/60">
-        {taskKey ? t('deletedWithKey', { key: taskKey }) : t('deleted')}
+        {taskKey ? t('detail.deletedTask', { key: taskKey }) : t('detail.deletedTaskGeneric')}
       </span>
     )
   }
@@ -95,7 +95,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const newStatusVal = newValue?.status as string | undefined
     return (
       <span className="text-foreground/60">
-        {t('statusChanged')}{' '}
+        {t('detail.statusChanged')}{' '}
         <span className="font-medium text-foreground">{oldStatus ? tStatus(oldStatus as 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE') : oldStatus}</span>
         {' → '}
         <span className="font-medium text-foreground">{newStatusVal ? tStatus(newStatusVal as 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE') : newStatusVal}</span>
@@ -107,7 +107,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const newAssigneeId = newValue?.assigneeId as string | null | undefined
     return (
       <span className="text-foreground/60">
-        {newAssigneeId ? t('assigneeChanged') : t('assigneeRemoved')}
+        {newAssigneeId ? t('detail.assigneeChanged') : t('detail.assigneeRemoved')}
       </span>
     )
   }
@@ -116,7 +116,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const content = newValue?.content as string | undefined
     return (
       <span className="text-foreground/60">
-        {t('commented')}
+        {t('detail.commented')}
         {content && (
           <span className="ml-1 text-foreground/40">
             — {content.length > 80 ? `${content.substring(0, 80)}...` : content}
@@ -130,7 +130,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     const fileName = newValue?.fileName as string | undefined
     return (
       <span className="text-foreground/60">
-        {t('attached')}
+        {t('detail.attached')}
         {fileName && <span className="ml-1 font-medium text-foreground">{fileName}</span>}
       </span>
     )
@@ -146,7 +146,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     }
 
     if (changes.length === 0) {
-      return <span className="text-foreground/60">{t('updated')}</span>
+      return <span className="text-foreground/60">{t('detail.updatedTask')}</span>
     }
 
     return (
@@ -154,7 +154,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
         {changes.map(({ field, oldVal, newVal }) => (
           <div key={field} className="text-foreground/60">
             <span className="font-medium text-foreground/80">{getFieldLabel(field)}</span>
-            {t('fieldChanged')}{' '}
+            {t('detail.fieldChanged')}{' '}
             <span className="font-medium text-foreground">{formatFieldValue(field, oldVal)}</span>
             {' → '}
             <span className="font-medium text-foreground">{formatFieldValue(field, newVal)}</span>
@@ -164,7 +164,7 @@ const ActivityDetail = ({ activity }: { activity: ActivityItem }) => {
     )
   }
 
-  return <span className="text-foreground/60">{t('actionPerformed', { action: t(`actions.${action}`) })}</span>
+  return <span className="text-foreground/60">{t('detail.actionDone', { action: t(`actions.${action}` as 'actions.CREATED' | 'actions.UPDATED' | 'actions.DELETED' | 'actions.STATUS_CHANGED' | 'actions.ASSIGNED' | 'actions.COMMENTED' | 'actions.ATTACHED') })}</span>
 }
 
 interface TaskActivityLogProps {

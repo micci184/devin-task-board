@@ -262,7 +262,13 @@
     "markAllRead": "Mark all as read",
     "noUnread": "No unread notifications",
     "noRead": "No read notifications",
-    "noNotifications": "No notifications"
+    "noNotifications": "No notifications",
+    "fetchError": "Failed to fetch notifications",
+    "readUpdateError": "Failed to update read status",
+    "markAllError": "Failed to mark all as read",
+    "markAllSuccess": "All notifications marked as read",
+    "markAsUnread": "Mark as unread",
+    "markAsRead": "Mark as read"
   },
   "tasks": {
     "createTitle": "Create Task",
@@ -302,7 +308,11 @@
     "categoryUpdateError": "Failed to update category",
     "noTasks": "No tasks",
     "fetchError": "Failed to fetch tasks",
-    "updateError": "Failed to update task"
+    "updateError": "Failed to update task",
+    "numberColumn": "#",
+    "paginationInfo": "{from}-{to} of {total}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
   },
   "subtasks": {
     "title": "Subtasks",
@@ -384,7 +394,10 @@
       "fieldChanged": "changed:",
       "actionDone": "Task {action}"
     },
-    "feedMessage": "{user} {action} {entity}"
+    "feedMessage": "{user} {action} {entity}",
+    "paginationInfo": "{from}-{to} of {total}",
+    "prevPage": "Previous page",
+    "nextPage": "Next page"
   },
   "taskList": {
     "number": "#",

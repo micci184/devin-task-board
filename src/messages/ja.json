@@ -262,7 +262,13 @@
     "markAllRead": "すべて既読にする",
     "noUnread": "未読の通知はありません",
     "noRead": "既読の通知はありません",
-    "noNotifications": "通知はありません"
+    "noNotifications": "通知はありません",
+    "fetchError": "通知の取得に失敗しました",
+    "readUpdateError": "既読の更新に失敗しました",
+    "markAllError": "一括既読に失敗しました",
+    "markAllSuccess": "すべての通知を既読にしました",
+    "markAsUnread": "未読にする",
+    "markAsRead": "既読にする"
   },
   "tasks": {
     "createTitle": "タスクを作成",
@@ -302,7 +308,11 @@
     "categoryUpdateError": "カテゴリの更新に失敗しました",
     "noTasks": "タスクがありません",
     "fetchError": "タスクの取得に失敗しました",
-    "updateError": "タスクの更新に失敗しました"
+    "updateError": "タスクの更新に失敗しました",
+    "numberColumn": "番号",
+    "paginationInfo": "{total}件中 {from}〜{to}件",
+    "previousPage": "前のページ",
+    "nextPage": "次のページ"
   },
   "subtasks": {
     "title": "サブタスク",
@@ -384,7 +394,10 @@
       "fieldChanged": "を変更:",
       "actionDone": "タスクを{action}しました"
     },
-    "feedMessage": "{user} が {entity} を {action} しました"
+    "feedMessage": "{user} が {entity} を {action} しました",
+    "paginationInfo": "{total}件中 {from}〜{to}件",
+    "prevPage": "前のページ",
+    "nextPage": "次のページ"
   },
   "taskList": {
     "number": "番号",

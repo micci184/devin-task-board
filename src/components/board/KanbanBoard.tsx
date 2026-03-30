@@ -322,7 +322,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
             }).then(async (res) => {
               if (!res.ok) {
                 const json = await res.json()
-                throw new Error(json.error?.message ?? tBoard('statusUpdateError'))
+                throw new Error(json.error?.message ?? tBoard('statusError'))
               }
             }),
           ),
@@ -331,7 +331,7 @@ export const KanbanBoard = ({ tasks, projectId, projectKey, categories }: Kanban
       } catch (error) {
         setLocalTasks(tasks)
         toast.error(
-          error instanceof Error ? error.message : tBoard('statusUpdateError'),
+          error instanceof Error ? error.message : tBoard('statusError'),
         )
       }
     }

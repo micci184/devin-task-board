@@ -38,8 +38,8 @@ export const ActivityFeed = async ({ activities }: Props) => {
       ) : (
         <ul className="space-y-3">
           {activities.map((activity) => {
-            const actionLabel = t(`action.${activity.action}` as 'action.CREATED' | 'action.UPDATED' | 'action.DELETED' | 'action.STATUS_CHANGED' | 'action.ASSIGNED' | 'action.COMMENTED' | 'action.ATTACHED')
-            const entityLabel = t(`entity.${activity.entityType}` as 'entity.task' | 'entity.comment' | 'entity.project')
+            const actionLabel = t(`actions.${activity.action}` as 'actions.CREATED' | 'actions.UPDATED' | 'actions.DELETED' | 'actions.STATUS_CHANGED' | 'actions.ASSIGNED' | 'actions.COMMENTED' | 'actions.ATTACHED')
+            const entityLabel = t(`entities.${activity.entityType}` as 'entities.task' | 'entities.comment' | 'entities.project')
             return (
               <li
                 key={activity.id}
@@ -52,7 +52,7 @@ export const ActivityFeed = async ({ activities }: Props) => {
                   <p className="text-sm text-foreground">
                     <span className="font-medium">{activity.user.name}</span>
                     {' '}
-                    {t('activityMessage', { entity: entityLabel, action: actionLabel })}
+                    {t('feedMessage', { entity: entityLabel, action: actionLabel })}
                   </p>
                   <p className="mt-0.5 text-xs text-foreground/40">
                     {formatDistanceToNow(new Date(activity.createdAt), {

@@ -22,12 +22,12 @@ type Props = {
 }
 
 export const PriorityPieChart = ({ data }: Props) => {
-  const t = useTranslations('tasks')
+  const tPriority = useTranslations('priority')
   const tDashboard = useTranslations('dashboard')
   const chartData = data
     .filter((item) => item.count > 0)
     .map((item) => ({
-      name: t(`priority.${item.priority}` as 'priority.URGENT' | 'priority.HIGH' | 'priority.MEDIUM' | 'priority.LOW' | 'priority.NONE'),
+      name: tPriority(item.priority as 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE'),
       value: item.count,
       color: PRIORITY_COLORS[item.priority] ?? '#94a3b8',
     }))

@@ -50,7 +50,7 @@ export const ProjectSettingsForm = ({
               htmlFor="name"
               className="block text-sm font-medium text-foreground"
             >
-              {t('name')} <span className="text-danger">*</span>
+              {t('projectName')} <span className="text-danger">*</span>
             </label>
             <input
               id="name"
@@ -86,7 +86,7 @@ export const ProjectSettingsForm = ({
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             {isPending && <Loader2 size={14} className="animate-spin" />}
-            {isPending ? tCommon('saving') : t('saveChanges')}
+            {isPending ? tCommon('saving') : tCommon('save')}
           </button>
         </div>
       </div>

@@ -102,7 +102,7 @@ export const KanbanColumn = ({
         <button
           onClick={handleOpenForm}
           className="flex h-6 w-6 items-center justify-center rounded text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
-          aria-label={tBoard('addTask', { column: label })}
+          aria-label={tBoard('addTask', { status: label })}
         >
           <Plus size={14} />
         </button>

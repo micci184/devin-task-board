@@ -27,7 +27,7 @@ type Props = {
 }
 
 export const MyTaskList = async ({ tasks, title }: Props) => {
-  const t = await getTranslations('tasks')
+  const tPriority = await getTranslations('priority')
   const tDashboard = await getTranslations('dashboard')
 
   return (
@@ -39,7 +39,7 @@ export const MyTaskList = async ({ tasks, title }: Props) => {
         <ul className="space-y-3">
           {tasks.map((task) => {
             const className = PRIORITY_CLASSNAME[task.priority] ?? PRIORITY_CLASSNAME.NONE
-            const priorityLabel = t(`priority.${task.priority}` as 'priority.URGENT' | 'priority.HIGH' | 'priority.MEDIUM' | 'priority.LOW' | 'priority.NONE')
+            const priorityLabel = tPriority(task.priority as 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE')
             return (
               <li key={task.id}>
                 <Link
