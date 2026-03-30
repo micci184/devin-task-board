@@ -175,6 +175,7 @@ export const GanttChart = ({
 }: GanttChartProps) => {
   const router = useRouter()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const hasScrolledRef = useRef(false)
 
   const [viewMode, setViewMode] = useState<ViewMode>('day')
   const [groupBy, setGroupBy] = useState<GroupBy>('none')
@@ -273,11 +274,12 @@ export const GanttChart = ({
     return result
   }, [groups, groupBy])
 
-  // Scroll to today on mount
+  // Scroll to today on mount only
   useEffect(() => {
-    if (scrollContainerRef.current) {
+    if (scrollContainerRef.current && !hasScrolledRef.current) {
       const todayX = dateToX(today)
       scrollContainerRef.current.scrollLeft = todayX - scrollContainerRef.current.clientWidth / 3
+      hasScrolledRef.current = true
     }
   }, [dateToX, today])
 
