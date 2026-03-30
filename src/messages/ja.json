@@ -1,0 +1,116 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "search": "検索...",
+    "clearSearch": "検索をクリア",
+    "filter": "フィルター",
+    "clearAll": "すべてクリア",
+    "status": "ステータス",
+    "priority": "優先度",
+    "assignee": "担当者",
+    "category": "カテゴリ",
+    "noResults": "結果が見つかりません",
+    "user": "ユーザー"
+  },
+  "auth": {
+    "login": "ログイン",
+    "loginTitle": "ログイン",
+    "loggingIn": "ログイン中...",
+    "signup": "サインアップ",
+    "signupTitle": "サインアップ",
+    "signingUp": "登録中...",
+    "logout": "ログアウト",
+    "email": "メールアドレス",
+    "emailPlaceholder": "mail@example.com",
+    "password": "パスワード",
+    "passwordPlaceholder": "••••••••",
+    "passwordMinLength": "8文字以上",
+    "name": "名前",
+    "namePlaceholder": "田中 太郎",
+    "noAccount": "アカウントをお持ちでない方は",
+    "hasAccount": "既にアカウントをお持ちの方は",
+    "loginError": "メールアドレスまたはパスワードが正しくありません",
+    "loginGenericError": "ログイン中にエラーが発生しました",
+    "signupError": "サインアップに失敗しました",
+    "signupGenericError": "サインアップ中にエラーが発生しました",
+    "validation": {
+      "emailRequired": "メールアドレスは必須です",
+      "emailInvalid": "メールアドレスの形式が正しくありません",
+      "nameRequired": "名前は必須です",
+      "nameMax": "名前は255文字以内で入力してください",
+      "passwordRequired": "パスワードは必須です",
+      "passwordMin": "パスワードは8文字以上で入力してください"
+    }
+  },
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "projects": "プロジェクト",
+    "notifications": "通知",
+    "settings": "設定",
+    "menu": "メニュー",
+    "themeToggle": "テーマ切替",
+    "userMenu": "ユーザーメニュー",
+    "expandSidebar": "サイドバーを展開",
+    "collapseSidebar": "サイドバーを折りたたむ",
+    "openFilter": "フィルターを開く"
+  },
+  "theme": {
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム"
+  },
+  "priority": {
+    "URGENT": "緊急",
+    "HIGH": "高",
+    "MEDIUM": "中",
+    "LOW": "低",
+    "NONE": "-"
+  },
+  "status": {
+    "BACKLOG": "Backlog",
+    "TODO": "ToDo",
+    "IN_PROGRESS": "進行中",
+    "IN_REVIEW": "レビュー",
+    "DONE": "完了"
+  },
+  "search": {
+    "placeholder": "検索...",
+    "clear": "検索をクリア",
+    "noResults": "該当するタスクが見つかりません",
+    "filter": "フィルター",
+    "clearAll": "すべてクリア",
+    "status": "ステータス",
+    "priority": "優先度",
+    "assignee": "担当者",
+    "category": "カテゴリ",
+    "openFilter": "フィルターを開く",
+    "dueDateFrom": "開始日",
+    "dueDateTo": "終了日",
+    "dueDate": "期日"
+  },
+  "settings": {
+    "title": "プロフィール設定",
+    "profileSection": "プロフィール情報",
+    "name": "表示名",
+    "email": "メールアドレス",
+    "language": "言語",
+    "languageDescription": "UIの表示言語を選択してください",
+    "japanese": "日本語",
+    "english": "English",
+    "theme": "テーマ",
+    "themeDescription": "画面のテーマを選択してください",
+    "save": "保存",
+    "saving": "保存中...",
+    "saveSuccess": "設定を保存しました",
+    "saveError": "設定の保存に失敗しました",
+    "avatarUrl": "アバターURL",
+    "avatarUrlPlaceholder": "https://example.com/avatar.png"
+  },
+  "date": {
+    "format": "yyyy年MM月dd日"
+  }
+}

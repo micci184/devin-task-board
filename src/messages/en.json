@@ -1,0 +1,116 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search...",
+    "clearSearch": "Clear search",
+    "filter": "Filter",
+    "clearAll": "Clear all",
+    "status": "Status",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "category": "Category",
+    "noResults": "No results found",
+    "user": "User"
+  },
+  "auth": {
+    "login": "Log in",
+    "loginTitle": "Log in",
+    "loggingIn": "Logging in...",
+    "signup": "Sign up",
+    "signupTitle": "Sign up",
+    "signingUp": "Signing up...",
+    "logout": "Log out",
+    "email": "Email",
+    "emailPlaceholder": "mail@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "passwordMinLength": "8 or more characters",
+    "name": "Name",
+    "namePlaceholder": "John Doe",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginError": "Invalid email or password",
+    "loginGenericError": "An error occurred during login",
+    "signupError": "Sign up failed",
+    "signupGenericError": "An error occurred during sign up",
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email format",
+      "nameRequired": "Name is required",
+      "nameMax": "Name must be 255 characters or less",
+      "passwordRequired": "Password is required",
+      "passwordMin": "Password must be at least 8 characters"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "menu": "Menu",
+    "themeToggle": "Toggle theme",
+    "userMenu": "User menu",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "openFilter": "Open filter"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "priority": {
+    "URGENT": "Urgent",
+    "HIGH": "High",
+    "MEDIUM": "Medium",
+    "LOW": "Low",
+    "NONE": "-"
+  },
+  "status": {
+    "BACKLOG": "Backlog",
+    "TODO": "ToDo",
+    "IN_PROGRESS": "In Progress",
+    "IN_REVIEW": "In Review",
+    "DONE": "Done"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "clear": "Clear search",
+    "noResults": "No matching tasks found",
+    "filter": "Filter",
+    "clearAll": "Clear all",
+    "status": "Status",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "category": "Category",
+    "openFilter": "Open filter",
+    "dueDateFrom": "From",
+    "dueDateTo": "To",
+    "dueDate": "Due date"
+  },
+  "settings": {
+    "title": "Profile Settings",
+    "profileSection": "Profile Information",
+    "name": "Display Name",
+    "email": "Email",
+    "language": "Language",
+    "languageDescription": "Select the display language",
+    "japanese": "日本語",
+    "english": "English",
+    "theme": "Theme",
+    "themeDescription": "Select the screen theme",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Failed to save settings",
+    "avatarUrl": "Avatar URL",
+    "avatarUrlPlaceholder": "https://example.com/avatar.png"
+  },
+  "date": {
+    "format": "MMM dd, yyyy"
+  }
+}

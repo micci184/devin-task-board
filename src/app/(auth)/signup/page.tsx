@@ -4,13 +4,15 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
-import { signupSchema } from "@/lib/validations/auth";
+import { createSignupSchema } from "@/lib/validations/auth";
 
 import type { SignupInput } from "@/lib/validations/auth";
 
 const SignupPage = () => {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
@@ -29,6 +31,7 @@ const SignupPage = () => {
       password: formData.get("password") as string,
     };
 
+    const signupSchema = createSignupSchema(t);
     const parsed = signupSchema.safeParse(data);
     if (!parsed.success) {
       const errors: Partial<Record<keyof SignupInput, string>> = {};
@@ -51,7 +54,7 @@ const SignupPage = () => {
       const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error?.message ?? "サインアップに失敗しました");
+        setError(json.error?.message ?? t("signupError"));
         return;
       }
 
@@ -67,7 +70,7 @@ const SignupPage = () => {
         router.push("/dashboard");
       }
     } catch {
-      setError("サインアップ中にエラーが発生しました");
+      setError(t("signupGenericError"));
     } finally {
       setLoading(false);
     }
@@ -77,7 +80,7 @@ const SignupPage = () => {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-md rounded-lg border border-foreground/10 bg-background p-8 shadow-lg">
         <h1 className="mb-6 text-center text-2xl font-bold text-foreground">
-          サインアップ
+          {t("signupTitle")}
         </h1>
 
         {error && (
@@ -92,7 +95,7 @@ const SignupPage = () => {
               htmlFor="name"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              名前
+              {t("name")}
             </label>
             <input
               id="name"
@@ -100,7 +103,7 @@ const SignupPage = () => {
               type="text"
               autoComplete="name"
               className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="田中 太郎"
+              placeholder={t("namePlaceholder")}
             />
             {fieldErrors.name && (
               <p className="mt-1 text-sm text-danger">{fieldErrors.name}</p>
@@ -112,7 +115,7 @@ const SignupPage = () => {
               htmlFor="email"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              メールアドレス
+              {t("email")}
             </label>
             <input
               id="email"
@@ -120,7 +123,7 @@ const SignupPage = () => {
               type="email"
               autoComplete="email"
               className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="mail@example.com"
+              placeholder={t("emailPlaceholder")}
             />
             {fieldErrors.email && (
               <p className="mt-1 text-sm text-danger">{fieldErrors.email}</p>
@@ -132,7 +135,7 @@ const SignupPage = () => {
               htmlFor="password"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              パスワード
+              {t("password")}
             </label>
             <input
               id="password"
@@ -140,7 +143,7 @@ const SignupPage = () => {
               type="password"
               autoComplete="new-password"
               className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="8文字以上"
+              placeholder={t("passwordMinLength")}
             />
             {fieldErrors.password && (
               <p className="mt-1 text-sm text-danger">{fieldErrors.password}</p>
@@ -152,14 +155,14 @@ const SignupPage = () => {
             disabled={loading}
             className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? "登録中..." : "サインアップ"}
+            {loading ? t("signingUp") : t("signup")}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-foreground/60">
-          既にアカウントをお持ちの方は{" "}
+          {t("hasAccount")}{" "}
           <Link href="/login" className="text-primary hover:underline">
-            ログイン
+            {t("login")}
           </Link>
         </p>
       </div>

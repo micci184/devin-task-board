@@ -1,5 +1,30 @@
 import { z } from "zod";
 
+type TranslationFn = (key: string) => string;
+
+export const createSignupSchema = (t: TranslationFn) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, t("validation.emailRequired"))
+      .email(t("validation.emailInvalid")),
+    name: z
+      .string()
+      .min(1, t("validation.nameRequired"))
+      .max(255, t("validation.nameMax")),
+    password: z.string().min(8, t("validation.passwordMin")),
+  });
+
+export const createLoginSchema = (t: TranslationFn) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, t("validation.emailRequired"))
+      .email(t("validation.emailInvalid")),
+    password: z.string().min(1, t("validation.passwordRequired")),
+  });
+
+// Server-side schemas with default Japanese messages
 export const signupSchema = z.object({
   email: z
     .string()

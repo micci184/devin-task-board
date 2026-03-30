@@ -4,13 +4,15 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
-import { loginSchema } from "@/lib/validations/auth";
+import { createLoginSchema } from "@/lib/validations/auth";
 
 import type { LoginInput } from "@/lib/validations/auth";
 
 const LoginPage = () => {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
@@ -28,6 +30,7 @@ const LoginPage = () => {
       password: formData.get("password") as string,
     };
 
+    const loginSchema = createLoginSchema(t);
     const parsed = loginSchema.safeParse(data);
     if (!parsed.success) {
       const errors: Partial<Record<keyof LoginInput, string>> = {};
@@ -48,12 +51,12 @@ const LoginPage = () => {
       });
 
       if (result?.error) {
-        setError("メールアドレスまたはパスワードが正しくありません");
+        setError(t("loginError"));
       } else {
         router.push("/dashboard");
       }
     } catch {
-      setError("ログイン中にエラーが発生しました");
+      setError(t("loginGenericError"));
     } finally {
       setLoading(false);
     }
@@ -63,7 +66,7 @@ const LoginPage = () => {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-md rounded-lg border border-foreground/10 bg-background p-8 shadow-lg">
         <h1 className="mb-6 text-center text-2xl font-bold text-foreground">
-          ログイン
+          {t("loginTitle")}
         </h1>
 
         {error && (
@@ -78,7 +81,7 @@ const LoginPage = () => {
               htmlFor="email"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              メールアドレス
+              {t("email")}
             </label>
             <input
               id="email"
@@ -86,7 +89,7 @@ const LoginPage = () => {
               type="email"
               autoComplete="email"
               className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="mail@example.com"
+              placeholder={t("emailPlaceholder")}
             />
             {fieldErrors.email && (
               <p className="mt-1 text-sm text-danger">{fieldErrors.email}</p>
@@ -98,7 +101,7 @@ const LoginPage = () => {
               htmlFor="password"
               className="mb-1 block text-sm font-medium text-foreground"
             >
-              パスワード
+              {t("password")}
             </label>
             <input
               id="password"
@@ -106,7 +109,7 @@ const LoginPage = () => {
               type="password"
               autoComplete="current-password"
               className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="••••••••"
+              placeholder={t("passwordPlaceholder")}
             />
             {fieldErrors.password && (
               <p className="mt-1 text-sm text-danger">{fieldErrors.password}</p>
@@ -118,14 +121,14 @@ const LoginPage = () => {
             disabled={loading}
             className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? "ログイン中..." : "ログイン"}
+            {loading ? t("loggingIn") : t("login")}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-foreground/60">
-          アカウントをお持ちでない方は{" "}
+          {t("noAccount")}{" "}
           <Link href="/signup" className="text-primary hover:underline">
-            サインアップ
+            {t("signup")}
           </Link>
         </p>
       </div>
