@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import {
@@ -187,15 +187,26 @@ export const GanttChart = ({
   const [dragStartX, setDragStartX] = useState(0)
   const [dragDeltaDays, setDragDeltaDays] = useState(0)
   const dragDeltaDaysRef = useRef(0)
+  const localTasksRef = useRef(localTasks)
+  const tasksRef = useRef(tasks)
+  const dragTypeRef = useRef(dragType)
+  const dragTaskIdRef = useRef(dragTaskId)
+  const dragStartXRef = useRef(dragStartX)
+
+  localTasksRef.current = localTasks
+  tasksRef.current = tasks
+  dragTypeRef.current = dragType
+  dragTaskIdRef.current = dragTaskId
+  dragStartXRef.current = dragStartX
 
   useEffect(() => {
     setLocalTasks(tasks)
   }, [tasks])
 
-  const today = useMemo(() => new Date(), [])
+  const [today] = useState(() => new Date())
 
   // Calculate timeline range
-  const { timelineStart, timelineEnd } = useMemo(() => {
+  const computeTimelineRange = () => {
     const validTasks = localTasks.filter((t) => t.startDate || t.dueDate)
     if (validTasks.length === 0) {
       const s = addDays(today, -14)
@@ -218,10 +229,11 @@ export const GanttChart = ({
     const s = addDays(startOfWeek(earliest, { locale: ja }), -7)
     const e = addDays(endOfWeek(latest, { locale: ja }), 14)
     return { timelineStart: s, timelineEnd: e }
-  }, [localTasks, today])
+  }
+  const { timelineStart, timelineEnd } = computeTimelineRange()
 
   // Generate time cells based on view mode
-  const timeCells = useMemo(() => {
+  const computeTimeCells = () => {
     if (viewMode === 'day') {
       return eachDayOfInterval({ start: timelineStart, end: timelineEnd })
     }
@@ -229,50 +241,42 @@ export const GanttChart = ({
       return eachWeekOfInterval({ start: timelineStart, end: timelineEnd }, { locale: ja })
     }
     return eachMonthOfInterval({ start: timelineStart, end: timelineEnd })
-  }, [viewMode, timelineStart, timelineEnd])
+  }
+  const timeCells = computeTimeCells()
 
   const totalTimelineWidth = timeCells.length * viewModeConfig[viewMode].cellWidth
 
   // Convert date to pixel position
-  const dateToX = useCallback(
-    (date: Date): number => {
-      const totalDays = differenceInDays(timelineEnd, timelineStart)
-      if (totalDays === 0) return 0
-      const dayOffset = differenceInDays(date, timelineStart)
-      return (dayOffset / totalDays) * totalTimelineWidth
-    },
-    [timelineStart, timelineEnd, totalTimelineWidth],
-  )
+  const dateToX = (date: Date): number => {
+    const totalDays = differenceInDays(timelineEnd, timelineStart)
+    if (totalDays === 0) return 0
+    const dayOffset = differenceInDays(date, timelineStart)
+    return (dayOffset / totalDays) * totalTimelineWidth
+  }
 
   // Filter tasks with valid dates and those without
-  const { scheduledTasks, unscheduledTasks } = useMemo(() => {
-    const scheduled: GanttTask[] = []
-    const unscheduled: GanttTask[] = []
-    for (const task of localTasks) {
-      if (task.startDate && task.dueDate) {
-        scheduled.push(task)
-      } else {
-        unscheduled.push(task)
-      }
+  const scheduledTasks: GanttTask[] = []
+  const unscheduledTasks: GanttTask[] = []
+  for (const task of localTasks) {
+    if (task.startDate && task.dueDate) {
+      scheduledTasks.push(task)
+    } else {
+      unscheduledTasks.push(task)
     }
-    return { scheduledTasks: scheduled, unscheduledTasks: unscheduled }
-  }, [localTasks])
+  }
 
-  const groups = useMemo(() => groupTasks(scheduledTasks, groupBy), [scheduledTasks, groupBy])
+  const groups = groupTasks(scheduledTasks, groupBy)
 
   // Build flat row list for rendering
-  const rows = useMemo(() => {
-    const result: Array<{ type: 'group'; group: TaskGroup } | { type: 'task'; task: GanttTask; groupKey: string }> = []
-    for (const group of groups) {
-      if (groupBy !== 'none') {
-        result.push({ type: 'group', group })
-      }
-      for (const task of group.tasks) {
-        result.push({ type: 'task', task, groupKey: group.key })
-      }
+  const rows: Array<{ type: 'group'; group: TaskGroup } | { type: 'task'; task: GanttTask; groupKey: string }> = []
+  for (const group of groups) {
+    if (groupBy !== 'none') {
+      rows.push({ type: 'group', group })
     }
-    return result
-  }, [groups, groupBy])
+    for (const task of group.tasks) {
+      rows.push({ type: 'task', task, groupKey: group.key })
+    }
+  }
 
   // Scroll to today on mount only
   useEffect(() => {
@@ -321,11 +325,15 @@ export const GanttChart = ({
   useEffect(() => {
     if (!dragTaskId || !dragType) return
 
+    const currentTimelineStart = timelineStart
+    const currentTimelineEnd = timelineEnd
+    const currentTotalWidth = totalTimelineWidth
+
     const handleMouseMove = (e: MouseEvent) => {
-      const totalDays = differenceInDays(timelineEnd, timelineStart)
+      const totalDays = differenceInDays(currentTimelineEnd, currentTimelineStart)
       if (totalDays === 0) return
-      const pxPerDay = totalTimelineWidth / totalDays
-      const deltaX = e.clientX - dragStartX
+      const pxPerDay = currentTotalWidth / totalDays
+      const deltaX = e.clientX - dragStartXRef.current
       const deltaDays = Math.round(deltaX / pxPerDay)
       dragDeltaDaysRef.current = deltaDays
       setDragDeltaDays(deltaDays)
@@ -333,13 +341,16 @@ export const GanttChart = ({
 
     const handleMouseUp = async () => {
       const currentDeltaDays = dragDeltaDaysRef.current
-      if (!dragTaskId || currentDeltaDays === 0) {
+      const currentDragTaskId = dragTaskIdRef.current
+      const currentDragType = dragTypeRef.current
+
+      if (!currentDragTaskId || currentDeltaDays === 0) {
         setDragTaskId(null)
         setDragType(null)
         return
       }
 
-      const task = localTasks.find((t) => t.id === dragTaskId)
+      const task = localTasksRef.current.find((t) => t.id === currentDragTaskId)
       if (!task || !task.startDate || !task.dueDate) {
         setDragTaskId(null)
         setDragType(null)
@@ -352,10 +363,10 @@ export const GanttChart = ({
       let newStart: Date
       let newEnd: Date
 
-      if (dragType === 'move') {
+      if (currentDragType === 'move') {
         newStart = addDays(startDate, currentDeltaDays)
         newEnd = addDays(dueDate, currentDeltaDays)
-      } else if (dragType === 'resize-start') {
+      } else if (currentDragType === 'resize-start') {
         newStart = addDays(startDate, currentDeltaDays)
         newEnd = dueDate
         if (newStart >= newEnd) {
@@ -372,7 +383,7 @@ export const GanttChart = ({
       // Optimistic update
       setLocalTasks((prev) =>
         prev.map((t) =>
-          t.id === dragTaskId
+          t.id === currentDragTaskId
             ? { ...t, startDate: newStart.toISOString(), dueDate: newEnd.toISOString() }
             : t,
         ),
@@ -401,7 +412,7 @@ export const GanttChart = ({
         toast.success('スケジュールを更新しました')
         router.refresh()
       } catch (error) {
-        setLocalTasks(tasks)
+        setLocalTasks(tasksRef.current)
         toast.error(
           error instanceof Error ? error.message : '期限の更新に失敗しました',
         )
@@ -415,76 +426,75 @@ export const GanttChart = ({
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [dragTaskId, dragType, dragStartX, dragDeltaDays, localTasks, tasks, timelineStart, timelineEnd, totalTimelineWidth, router])
+  }, [dragTaskId, dragType, timelineStart, timelineEnd, totalTimelineWidth, router])
+
+  // Calculate drag-adjusted dates for a task
+  const getDragAdjustedDates = (task: GanttTask): { startDate: Date; dueDate: Date } | null => {
+    if (!task.startDate || !task.dueDate) return null
+
+    let startDate = new Date(task.startDate)
+    let dueDate = new Date(task.dueDate)
+
+    if (dragTaskId === task.id && dragDeltaDays !== 0) {
+      if (dragType === 'move') {
+        startDate = addDays(startDate, dragDeltaDays)
+        dueDate = addDays(dueDate, dragDeltaDays)
+      } else if (dragType === 'resize-start') {
+        startDate = addDays(startDate, dragDeltaDays)
+        if (startDate >= dueDate) startDate = addDays(dueDate, -1)
+      } else if (dragType === 'resize-end') {
+        dueDate = addDays(dueDate, dragDeltaDays)
+        if (dueDate <= startDate) dueDate = addDays(startDate, 1)
+      }
+    }
+
+    return { startDate, dueDate }
+  }
 
   // Calculate bar position for a task
-  const getBarStyle = useCallback(
-    (task: GanttTask) => {
-      if (!task.startDate || !task.dueDate) return null
+  const getBarStyle = (task: GanttTask) => {
+    const dates = getDragAdjustedDates(task)
+    if (!dates) return null
 
-      let startDate = new Date(task.startDate)
-      let dueDate = new Date(task.dueDate)
+    const left = dateToX(dates.startDate)
+    const right = dateToX(dates.dueDate)
+    const width = Math.max(right - left, 8)
 
-      if (dragTaskId === task.id && dragDeltaDays !== 0) {
-        if (dragType === 'move') {
-          startDate = addDays(startDate, dragDeltaDays)
-          dueDate = addDays(dueDate, dragDeltaDays)
-        } else if (dragType === 'resize-start') {
-          startDate = addDays(startDate, dragDeltaDays)
-          if (startDate >= dueDate) startDate = addDays(dueDate, -1)
-        } else if (dragType === 'resize-end') {
-          dueDate = addDays(dueDate, dragDeltaDays)
-          if (dueDate <= startDate) dueDate = addDays(startDate, 1)
-        }
-      }
-
-      const left = dateToX(startDate)
-      const right = dateToX(dueDate)
-      const width = Math.max(right - left, 8)
-
-      return { left, width }
-    },
-    [dateToX, dragTaskId, dragDeltaDays, dragType],
-  )
+    return { left, width }
+  }
 
   // Format header labels
-  const formatHeaderLabel = useCallback(
-    (date: Date) => {
-      if (viewMode === 'day') {
-        return format(date, 'd', { locale: ja })
-      }
-      if (viewMode === 'week') {
-        const weekEnd = endOfWeek(date, { locale: ja })
-        return `${format(date, 'M/d', { locale: ja })} - ${format(weekEnd, 'M/d', { locale: ja })}`
-      }
-      return format(date, 'yyyy年M月', { locale: ja })
-    },
-    [viewMode],
-  )
+  const formatHeaderLabel = (date: Date) => {
+    if (viewMode === 'day') {
+      return format(date, 'd', { locale: ja })
+    }
+    if (viewMode === 'week') {
+      const weekEnd = endOfWeek(date, { locale: ja })
+      return `${format(date, 'M/d', { locale: ja })} - ${format(weekEnd, 'M/d', { locale: ja })}`
+    }
+    return format(date, 'yyyy年M月', { locale: ja })
+  }
 
   // Format top-level header
-  const formatTopHeader = useCallback(
-    (date: Date, index: number, cells: Date[]) => {
-      if (viewMode === 'day') {
-        if (index === 0 || !isSameMonth(date, cells[index - 1])) {
-          return format(date, 'yyyy年M月', { locale: ja })
-        }
-        return null
-      }
-      if (viewMode === 'week') {
-        if (index === 0 || !isSameMonth(date, cells[index - 1])) {
-          return format(date, 'yyyy年M月', { locale: ja })
-        }
-        return null
-      }
-      // month
-      if (index === 0 || date.getFullYear() !== cells[index - 1].getFullYear()) {
-        return `${date.getFullYear()}年`
+  const formatTopHeader = (date: Date, index: number, cells: Date[]) => {
+    if (viewMode === 'day') {
+      if (index === 0 || !isSameMonth(date, cells[index - 1])) {
+        return format(date, 'yyyy年M月', { locale: ja })
       }
       return null
-    },
-    [viewMode],
-  )
+    }
+    if (viewMode === 'week') {
+      if (index === 0 || !isSameMonth(date, cells[index - 1])) {
+        return format(date, 'yyyy年M月', { locale: ja })
+      }
+      return null
+    }
+    // month
+    if (index === 0 || date.getFullYear() !== cells[index - 1].getFullYear()) {
+      return `${date.getFullYear()}年`
+    }
+    return null
+  }
 
   const todayX = dateToX(today)
 
@@ -799,14 +809,19 @@ export const GanttChart = ({
                           </div>
 
                           {/* Tooltip */}
-                          <div className="pointer-events-none absolute -top-10 left-0 z-30 hidden rounded-md border border-foreground/10 bg-background px-2 py-1 text-[10px] shadow-md group-hover:block">
-                            <span className="font-medium">{projectKey}-{task.taskNumber}</span>
-                            <span className="ml-1 text-foreground/50">
-                              {task.startDate && format(new Date(task.startDate), 'M/d', { locale: ja })}
-                              {' → '}
-                              {task.dueDate && format(new Date(task.dueDate), 'M/d', { locale: ja })}
-                            </span>
-                          </div>
+                          {(() => {
+                            const dates = getDragAdjustedDates(task)
+                            return (
+                              <div className="pointer-events-none absolute -top-10 left-0 z-30 hidden rounded-md border border-foreground/10 bg-background px-2 py-1 text-[10px] shadow-md group-hover:block">
+                                <span className="font-medium">{projectKey}-{task.taskNumber}</span>
+                                <span className="ml-1 text-foreground/50">
+                                  {dates && format(dates.startDate, 'M/d', { locale: ja })}
+                                  {' → '}
+                                  {dates && format(dates.dueDate, 'M/d', { locale: ja })}
+                                </span>
+                              </div>
+                            )
+                          })()}
                         </div>
                       )}
                     </div>
