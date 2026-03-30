@@ -131,7 +131,10 @@
     "saveSuccess": "Settings saved successfully",
     "saveError": "Failed to save settings",
     "avatarUrl": "Avatar URL",
-    "avatarUrlPlaceholder": "https://example.com/avatar.png"
+    "avatarUrlPlaceholder": "https://example.com/avatar.png",
+    "notificationSection": "Notification Settings",
+    "emailNotification": "Email Notifications",
+    "emailNotificationDescription": "Receive email notifications for task updates, comments, and more"
   },
   "date": {
     "format": "MMM dd, yyyy"

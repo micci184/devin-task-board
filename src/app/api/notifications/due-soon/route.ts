@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
+import { sendNotificationEmails } from '@/lib/email'
 
 import type { NextRequest } from 'next/server'
 
@@ -86,6 +87,34 @@ export const POST = async (request: NextRequest) => {
 
     if (notifications.length > 0) {
       await prisma.notification.createMany({ data: notifications })
+
+      // メール通知を送信
+      const userIds = [...new Set(notifications.map((n) => n.userId))]
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds }, emailNotification: true },
+        select: { id: true, email: true, locale: true },
+      })
+      const usersMap = new Map(users.map((u) => [u.id, u]))
+
+      const emailParams = notifications
+        .filter((n) => usersMap.has(n.userId))
+        .map((n) => {
+          const user = usersMap.get(n.userId)!
+          return {
+            to: user.email,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            linkUrl: n.linkUrl,
+            locale: user.locale,
+          }
+        })
+
+      if (emailParams.length > 0) {
+        sendNotificationEmails(emailParams).catch(() => {
+          // エラーは sendNotificationEmails 内でログ済み
+        })
+      }
     }
 
     return NextResponse.json({ data: { count: notifications.length } })

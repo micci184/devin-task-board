@@ -66,9 +66,10 @@ export const PriorityPieChart = ({ data }: Props) => {
             <Tooltip
               contentStyle={{
                 backgroundColor: 'var(--background)',
-                border: '1px solid oklch(0.5 0 0 / 0.15)',
+                border: '1px solid var(--foreground)',
                 borderRadius: '8px',
                 fontSize: '12px',
+                color: 'var(--foreground)',
               }}
             />
             <Legend

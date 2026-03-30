@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { Sun, Moon, Monitor } from "lucide-react";
 
 import type { Locale } from "@/i18n/config";
+import type { Theme } from "@prisma/client";
 
 interface UserProfile {
   id: string;
@@ -14,15 +17,26 @@ interface UserProfile {
   avatarUrl: string | null;
   locale: string;
   theme: string;
+  emailNotification: boolean;
 }
+
+const themeOptions = [
+  { value: "LIGHT" as Theme, icon: Sun, key: "light" as const },
+  { value: "DARK" as Theme, icon: Moon, key: "dark" as const },
+  { value: "SYSTEM" as Theme, icon: Monitor, key: "system" as const },
+] as const;
 
 const ProfileSettingsPage = () => {
   const t = useTranslations("settings");
+  const tTheme = useTranslations("theme");
   const router = useRouter();
+  const { setTheme: setNextTheme } = useTheme();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [name, setName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [locale, setLocale] = useState<Locale>("ja");
+  const [selectedTheme, setSelectedTheme] = useState<Theme>("SYSTEM");
+  const [emailNotification, setEmailNotification] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +50,8 @@ const ProfileSettingsPage = () => {
         setName(json.data.name);
         setAvatarUrl(json.data.avatarUrl ?? "");
         setLocale(json.data.locale as Locale);
+        setSelectedTheme(json.data.theme as Theme);
+        setEmailNotification(json.data.emailNotification);
       } catch {
         // ignore
       } finally {
@@ -55,6 +71,8 @@ const ProfileSettingsPage = () => {
           name: name.trim(),
           avatarUrl: avatarUrl.trim() || null,
           locale,
+          theme: selectedTheme,
+          emailNotification,
         }),
       });
 
@@ -63,6 +81,7 @@ const ProfileSettingsPage = () => {
         return;
       }
 
+      setNextTheme(selectedTheme.toLowerCase());
       toast.success(t("saveSuccess"));
       router.refresh();
     } catch {
@@ -137,6 +156,37 @@ const ProfileSettingsPage = () => {
           />
         </div>
 
+        {/* テーマ設定 */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-foreground/70">
+            {t("theme")}
+          </label>
+          <p className="text-xs text-foreground/50">
+            {t("themeDescription")}
+          </p>
+          <div className="flex gap-2">
+            {themeOptions.map((option) => {
+              const Icon = option.icon;
+              const isSelected = selectedTheme === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setSelectedTheme(option.value)}
+                  className={`flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-foreground/10 text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {tTheme(option.key)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* 言語設定 */}
         <div className="space-y-1.5">
           <label
@@ -157,6 +207,43 @@ const ProfileSettingsPage = () => {
             <option value="ja">{t("japanese")}</option>
             <option value="en">{t("english")}</option>
           </select>
+        </div>
+      </section>
+
+      <section className="space-y-6 rounded-lg border border-foreground/10 bg-background p-6">
+        <h2 className="text-sm font-semibold text-foreground">
+          {t("notificationSection")}
+        </h2>
+
+        {/* メール通知設定 */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <label
+              htmlFor="emailNotification"
+              className="text-sm font-medium text-foreground/70"
+            >
+              {t("emailNotification")}
+            </label>
+            <p className="text-xs text-foreground/50">
+              {t("emailNotificationDescription")}
+            </p>
+          </div>
+          <button
+            id="emailNotification"
+            type="button"
+            role="switch"
+            aria-checked={emailNotification}
+            onClick={() => setEmailNotification(!emailNotification)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+              emailNotification ? "bg-primary" : "bg-foreground/20"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${
+                emailNotification ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </section>
 

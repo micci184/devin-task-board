@@ -783,7 +783,7 @@ export const GanttChart = ({
                           style={{
                             left: barStyle.left,
                             width: barStyle.width,
-                            backgroundColor: `color-mix(in oklch, ${priorityColors[task.priority]} 25%, oklch(0.85 0.02 255))`,
+                            backgroundColor: `color-mix(in oklch, ${priorityColors[task.priority]} 25%, var(--background))`,
                             borderLeft: `3px solid ${priorityColors[task.priority]}`,
                           }}
                         >

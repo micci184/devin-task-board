@@ -14,11 +14,11 @@ type TaskItem = {
 }
 
 const PRIORITY_CLASSNAME: Record<string, string> = {
-  URGENT: 'bg-red-100 text-red-700',
-  HIGH: 'bg-orange-100 text-orange-700',
-  MEDIUM: 'bg-yellow-100 text-yellow-700',
-  LOW: 'bg-green-100 text-green-700',
-  NONE: 'bg-gray-100 text-gray-600',
+  URGENT: 'bg-danger/10 text-danger',
+  HIGH: 'bg-warning/10 text-warning',
+  MEDIUM: 'bg-primary/10 text-primary',
+  LOW: 'bg-success/10 text-success',
+  NONE: 'bg-foreground/10 text-foreground/60',
 }
 
 type Props = {
