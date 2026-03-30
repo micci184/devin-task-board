@@ -52,20 +52,23 @@ export const StatusBarChart = ({ data }: Props) => {
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.5 0 0 / 0.15)" />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 12 }}
-              stroke="oklch(0.5 0 0 / 0.4)"
+              tick={{ fontSize: 12, fill: 'var(--foreground)' }}
+              stroke="var(--foreground)"
+              opacity={0.4}
             />
             <YAxis
               allowDecimals={false}
-              tick={{ fontSize: 12 }}
-              stroke="oklch(0.5 0 0 / 0.4)"
+              tick={{ fontSize: 12, fill: 'var(--foreground)' }}
+              stroke="var(--foreground)"
+              opacity={0.4}
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'var(--background)',
-                border: '1px solid oklch(0.5 0 0 / 0.15)',
+                border: '1px solid var(--foreground)',
                 borderRadius: '8px',
                 fontSize: '12px',
+                color: 'var(--foreground)',
               }}
             />
             <Bar dataKey="count" name="タスク数" radius={[4, 4, 0, 0]}>

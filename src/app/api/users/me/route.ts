@@ -8,10 +8,13 @@ import { locales } from "@/i18n/config";
 
 import type { NextRequest } from "next/server";
 
+const themeValues = ["LIGHT", "DARK", "SYSTEM"] as const;
+
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   avatarUrl: z.string().url().nullable().optional(),
   locale: z.enum(locales).optional(),
+  theme: z.enum(themeValues).optional(),
   emailNotification: z.boolean().optional(),
 });
 
