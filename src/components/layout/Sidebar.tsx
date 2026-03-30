@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   LayoutDashboard,
@@ -13,16 +14,17 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
-  { href: "/projects", label: "プロジェクト", icon: FolderKanban },
-  { href: "/notifications", label: "通知", icon: Bell },
-  { href: "/settings/profile", label: "設定", icon: Settings },
+const navKeys = [
+  { href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/projects", key: "projects", icon: FolderKanban },
+  { href: "/notifications", key: "notifications", icon: Bell },
+  { href: "/settings/profile", key: "settings", icon: Settings },
 ];
 
 export const Sidebar = () => {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const t = useTranslations("nav");
 
   return (
     <aside
@@ -39,17 +41,18 @@ export const Sidebar = () => {
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
-          aria-label={collapsed ? "サイドバーを展開" : "サイドバーを折りたたむ"}
+          aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
       </div>
 
       <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => {
+        {navKeys.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
+          const label = t(item.key);
 
           return (
             <Link
@@ -60,10 +63,10 @@ export const Sidebar = () => {
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
               } ${collapsed ? "justify-center" : ""}`}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? label : undefined}
             >
               <Icon size={18} />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span>{label}</span>}
             </Link>
           );
         })}

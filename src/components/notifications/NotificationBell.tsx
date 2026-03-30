@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 import { Bell } from 'lucide-react'
 
 export const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0)
+  const t = useTranslations('nav')
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -30,7 +32,7 @@ export const NotificationBell = () => {
     <Link
       href="/notifications"
       className="relative flex h-8 w-8 items-center justify-center rounded-md text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
-      aria-label="通知"
+      aria-label={t('notifications')}
     >
       <Bell size={18} />
       {unreadCount > 0 && (

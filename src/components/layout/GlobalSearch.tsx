@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Search, X, FileText, SlidersHorizontal, Calendar, ChevronDown } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -59,20 +60,20 @@ interface SearchFilters {
   dueDateTo: string
 }
 
-const priorityConfig: Record<Priority, { label: string; className: string }> = {
-  URGENT: { label: '緊急', className: 'bg-danger/10 text-danger' },
-  HIGH: { label: '高', className: 'bg-warning/10 text-warning' },
-  MEDIUM: { label: '中', className: 'bg-primary/10 text-primary' },
-  LOW: { label: '低', className: 'bg-foreground/10 text-foreground/60' },
-  NONE: { label: '-', className: 'bg-foreground/5 text-foreground/40' },
+const priorityClassName: Record<Priority, string> = {
+  URGENT: 'bg-danger/10 text-danger',
+  HIGH: 'bg-warning/10 text-warning',
+  MEDIUM: 'bg-primary/10 text-primary',
+  LOW: 'bg-foreground/10 text-foreground/60',
+  NONE: 'bg-foreground/5 text-foreground/40',
 }
 
-const statusConfig: Record<TaskStatus, { label: string; className: string }> = {
-  BACKLOG: { label: 'Backlog', className: 'bg-foreground/10 text-foreground/60' },
-  TODO: { label: 'ToDo', className: 'bg-info/10 text-info' },
-  IN_PROGRESS: { label: '進行中', className: 'bg-primary/10 text-primary' },
-  IN_REVIEW: { label: 'レビュー', className: 'bg-warning/10 text-warning' },
-  DONE: { label: '完了', className: 'bg-success/10 text-success' },
+const statusClassName: Record<TaskStatus, string> = {
+  BACKLOG: 'bg-foreground/10 text-foreground/60',
+  TODO: 'bg-info/10 text-info',
+  IN_PROGRESS: 'bg-primary/10 text-primary',
+  IN_REVIEW: 'bg-warning/10 text-warning',
+  DONE: 'bg-success/10 text-success',
 }
 
 const ALL_STATUSES: TaskStatus[] = ['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']
@@ -180,6 +181,10 @@ const MultiSelectDropdown = <T extends string>({
 
 export const GlobalSearch = () => {
   const router = useRouter()
+  const tSearch = useTranslations('search')
+  const tPriority = useTranslations('priority')
+  const tStatus = useTranslations('status')
+  const tNav = useTranslations('nav')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchTask[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -412,14 +417,14 @@ export const GlobalSearch = () => {
             onFocus={() => {
               if (query.trim()) setIsOpen(true)
             }}
-            placeholder="検索..."
+            placeholder={tSearch('placeholder')}
             className="h-8 w-64 rounded-md border border-foreground/10 bg-foreground/5 pl-9 pr-8 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
           {query && (
             <button
               onClick={handleClear}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground"
-              aria-label="検索をクリア"
+              aria-label={tSearch('clear')}
             >
               <X size={14} />
             </button>
@@ -432,7 +437,7 @@ export const GlobalSearch = () => {
               ? 'border-primary bg-primary/10 text-primary'
               : 'border-foreground/10 bg-foreground/5 text-foreground/40 hover:text-foreground'
           }`}
-          aria-label="フィルターを開く"
+          aria-label={tNav('openFilter')}
         >
           <SlidersHorizontal size={14} />
           {activeFilterCount > 0 && (
@@ -447,13 +452,13 @@ export const GlobalSearch = () => {
       {showFilters && (
         <div ref={filterPanelRef} className="absolute left-0 top-full z-50 mt-1 w-[520px] rounded-md border border-foreground/10 bg-background p-3 shadow-lg">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium text-foreground/60">フィルター</span>
+            <span className="text-xs font-medium text-foreground/60">{tSearch('filter')}</span>
             {hasActiveFilters(filters) && (
               <button
                 onClick={handleClearFilters}
                 className="text-[11px] text-primary hover:underline"
               >
-                すべてクリア
+                {tSearch('clearAll')}
               </button>
             )}
           </div>
@@ -461,26 +466,26 @@ export const GlobalSearch = () => {
           <div className="grid grid-cols-2 gap-2">
             {/* ステータス（複数選択可） */}
             <MultiSelectDropdown<TaskStatus>
-              label="ステータス"
+              label={tSearch('status')}
               options={ALL_STATUSES}
               selected={filters.status}
               onChange={(val) => handleFilterChange({ ...filters, status: val })}
               renderOption={(s) => (
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${statusConfig[s].className}`}>
-                  {statusConfig[s].label}
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${statusClassName[s]}`}>
+                  {tStatus(s)}
                 </span>
               )}
             />
 
             {/* 優先度（複数選択可） */}
             <MultiSelectDropdown<Priority>
-              label="優先度"
+              label={tSearch('priority')}
               options={ALL_PRIORITIES}
               selected={filters.priority}
               onChange={(val) => handleFilterChange({ ...filters, priority: val })}
               renderOption={(p) => (
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${priorityConfig[p].className}`}>
-                  {priorityConfig[p].label}
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${priorityClassName[p]}`}>
+                  {tPriority(p)}
                 </span>
               )}
             />
@@ -497,7 +502,7 @@ export const GlobalSearch = () => {
                 }
                 className="h-8 w-full appearance-none rounded-md border border-foreground/10 bg-foreground/5 px-2.5 pr-7 text-xs text-foreground hover:border-foreground/20 focus:border-primary focus:outline-none"
               >
-                <option value="">担当者</option>
+                <option value="">{tSearch('assignee')}</option>
                 {assignees.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
@@ -512,7 +517,7 @@ export const GlobalSearch = () => {
 
             {/* カテゴリ（複数選択可） */}
             <MultiSelectDropdown<string>
-              label="カテゴリ"
+              label={tSearch('category')}
               options={categories.map((c) => c.id)}
               selected={filters.categoryId}
               onChange={(val) => handleFilterChange({ ...filters, categoryId: val })}
@@ -536,7 +541,7 @@ export const GlobalSearch = () => {
             {/* 期限範囲（開始日〜終了日） */}
             <div className="col-span-2 flex items-center gap-2">
               <Calendar size={12} className="shrink-0 text-foreground/40" />
-              <span className="text-xs text-foreground/50">期限:</span>
+              <span className="text-xs text-foreground/50">{tSearch('dueDate')}:</span>
               <input
                 type="date"
                 value={filters.dueDateFrom}
@@ -577,12 +582,12 @@ export const GlobalSearch = () => {
           ) : hasSearched && results.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-foreground/40">
               <Search size={24} className="mb-2" />
-              <p className="text-sm">&quot;{query}&quot; に一致する結果はありません</p>
+              <p className="text-sm">{tSearch('noResults')}</p>
             </div>
           ) : results.length > 0 ? (
             <div className="py-1">
               <div className="px-3 py-1.5 text-xs font-medium text-foreground/40">
-                {results.length}件の結果
+                {tSearch('resultsCount', { count: results.length })}
               </div>
               {results.map((task) => (
                 <button
@@ -602,12 +607,12 @@ export const GlobalSearch = () => {
                     <span className="text-xs text-foreground/50">
                       {task.project.name}
                     </span>
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${statusConfig[task.status].className}`}>
-                      {statusConfig[task.status].label}
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${statusClassName[task.status]}`}>
+                      {tStatus(task.status)}
                     </span>
                     {task.priority !== 'NONE' && (
-                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${priorityConfig[task.priority].className}`}>
-                        {priorityConfig[task.priority].label}
+                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${priorityClassName[task.priority]}`}>
+                        {tPriority(task.priority)}
                       </span>
                     )}
                     {task.assignee && (
