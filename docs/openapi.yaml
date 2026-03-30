@@ -2488,14 +2488,27 @@ paths:
     patch:
       tags:
         - Notifications
-      summary: 既読マーク
-      description: 指定した通知を既読にする
-      operationId: markNotificationAsRead
+      summary: 既読/未読切替
+      description: |
+        指定した通知の既読/未読を切り替える。
+        リクエストボディなしの場合はトグル（現在の値を反転）。
+        リクエストボディで isRead を指定した場合はその値に設定。
+      operationId: toggleNotificationRead
       parameters:
         - $ref: "#/components/parameters/NotificationId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isRead:
+                  type: boolean
+                  description: 設定する既読状態（省略時はトグル）
       responses:
         "200":
-          description: 既読マーク成功
+          description: 既読/未読切替成功
           content:
             application/json:
               schema:
@@ -2505,6 +2518,8 @@ paths:
                 properties:
                   data:
                     $ref: "#/components/schemas/Notification"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":

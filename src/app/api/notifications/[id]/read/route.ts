@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server'
 
+import { z } from 'zod'
+
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 
 import type { NextRequest } from 'next/server'
 
+const toggleReadSchema = z.object({
+  isRead: z.boolean().optional(),
+})
+
 export const PATCH = async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) => {
   try {
@@ -38,9 +44,26 @@ export const PATCH = async (
       )
     }
 
+    let newIsRead = !notification.isRead
+
+    const contentType = request.headers.get('content-type')
+    if (contentType?.includes('application/json')) {
+      const body = await request.json()
+      const parsed = toggleReadSchema.safeParse(body)
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0].message } },
+          { status: 400 },
+        )
+      }
+      if (parsed.data.isRead !== undefined) {
+        newIsRead = parsed.data.isRead
+      }
+    }
+
     const updated = await prisma.notification.update({
       where: { id },
-      data: { isRead: true },
+      data: { isRead: newIsRead },
     })
 
     return NextResponse.json({ data: updated })

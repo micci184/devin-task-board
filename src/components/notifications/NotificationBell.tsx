@@ -5,6 +5,8 @@ import Link from 'next/link'
 
 import { Bell } from 'lucide-react'
 
+export const NOTIFICATION_READ_CHANGED_EVENT = 'notification-read-changed'
+
 export const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -23,7 +25,16 @@ export const NotificationBell = () => {
     fetchUnreadCount()
 
     const interval = setInterval(fetchUnreadCount, 30000)
-    return () => clearInterval(interval)
+
+    const handleReadChanged = () => {
+      fetchUnreadCount()
+    }
+    window.addEventListener(NOTIFICATION_READ_CHANGED_EVENT, handleReadChanged)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener(NOTIFICATION_READ_CHANGED_EVENT, handleReadChanged)
+    }
   }, [])
 
   return (
