@@ -144,6 +144,9 @@ components:
             - DARK
             - SYSTEM
           description: テーマ設定
+        emailNotification:
+          type: boolean
+          description: メール通知の有効/無効
         createdAt:
           type: string
           format: date-time
@@ -609,6 +612,61 @@ components:
             - LOW
             - NONE
           default: NONE
+        status:
+          type: string
+          enum:
+            - BACKLOG
+            - TODO
+            - IN_PROGRESS
+            - IN_REVIEW
+            - DONE
+          default: TODO
+          description: 初期ステータス
+
+    SubtaskSummary:
+      type: object
+      description: サブタスクの要約情報（一覧・作成レスポンス用）
+      required:
+        - id
+        - taskNumber
+        - title
+        - status
+        - priority
+      properties:
+        id:
+          type: string
+          description: タスクID（cuid）
+        taskNumber:
+          type: integer
+          description: プロジェクト内連番
+        title:
+          type: string
+          description: タイトル
+        status:
+          type: string
+          enum:
+            - BACKLOG
+            - TODO
+            - IN_PROGRESS
+            - IN_REVIEW
+            - DONE
+        priority:
+          type: string
+          enum:
+            - URGENT
+            - HIGH
+            - MEDIUM
+            - LOW
+            - NONE
+        dueDate:
+          type:
+            - string
+            - "null"
+          format: date-time
+        assignee:
+          oneOf:
+            - $ref: "#/components/schemas/UserSummary"
+            - type: "null"
 
     # ── Comment ──
     Comment:
@@ -1011,8 +1069,7 @@ components:
         tasks:
           type: array
           items:
-            # 検索結果は軽量レスポンス。リレーション展開が必要な場合は TaskWithRelations に変更する
-            $ref: "#/components/schemas/Task"
+            $ref: "#/components/schemas/TaskWithRelations"
           description: 検索結果のタスク一覧
 
     # ── Auth ──
@@ -1095,6 +1152,9 @@ components:
             - LIGHT
             - DARK
             - SYSTEM
+        emailNotification:
+          type: boolean
+          description: メール通知の有効/無効
 
   parameters:
     ProjectId:
@@ -1215,6 +1275,16 @@ components:
             error:
               code: INTERNAL_ERROR
               message: サーバーエラーが発生しました
+    Conflict:
+      description: リソース競合
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: CONFLICT
+              message: リソースが既に存在します
 
 paths:
   # ────────────────────────────────────────
@@ -1251,12 +1321,15 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  # TODO: 未実装 — パスワードリセット機能
   /api/auth/reset-password:
     post:
       tags:
         - Auth
-      summary: パスワードリセット
-      description: メールアドレスを指定してパスワードリセットリンクを送信する
+      summary: パスワードリセット（未実装）
+      description: |
+        メールアドレスを指定してパスワードリセットリンクを送信する。
+        **※ 現在未実装。今後のフェーズで対応予定。**
       operationId: resetPassword
       security: []
       requestBody:
@@ -1509,6 +1582,46 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/projects/{id}/members/suggest:
+    get:
+      tags:
+        - Project Members
+      summary: メンバーサジェスト
+      description: クエリ文字列に部分一致するプロジェクトメンバーを検索して返す
+      operationId: suggestProjectMembers
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 検索クエリ（名前の部分一致）
+      responses:
+        "200":
+          description: サジェスト結果取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /api/projects/{id}/members/{memberId}:
     patch:
@@ -1584,38 +1697,11 @@ paths:
         - $ref: "#/components/parameters/ProjectId"
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/PerPageParam"
-        - name: status
+        - name: categoryIds
           in: query
           schema:
             type: string
-            enum:
-              - BACKLOG
-              - TODO
-              - IN_PROGRESS
-              - IN_REVIEW
-              - DONE
-          description: ステータスでフィルター
-        - name: priority
-          in: query
-          schema:
-            type: string
-            enum:
-              - URGENT
-              - HIGH
-              - MEDIUM
-              - LOW
-              - NONE
-          description: 優先度でフィルター
-        - name: assigneeId
-          in: query
-          schema:
-            type: string
-          description: 担当者でフィルター
-        - name: categoryId
-          in: query
-          schema:
-            type: string
-          description: カテゴリでフィルター
+          description: カテゴリIDでフィルター（カンマ区切りで複数指定可）
         - name: sortBy
           in: query
           schema:
@@ -1889,7 +1975,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Task"
+                      $ref: "#/components/schemas/SubtaskSummary"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1903,7 +1989,7 @@ paths:
       tags:
         - Subtasks
       summary: サブタスク作成
-      description: 指定タスクにサブタスクを作成する
+      description: 指定タスクにサブタスクを作成する。サブタスクのサブタスクは作成不可
       operationId: createSubtask
       parameters:
         - $ref: "#/components/parameters/TaskId"
@@ -1924,7 +2010,7 @@ paths:
                   - data
                 properties:
                   data:
-                    $ref: "#/components/schemas/Task"
+                    $ref: "#/components/schemas/SubtaskSummary"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -2137,6 +2223,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /api/categories/{categoryId}:
     patch:
@@ -2175,6 +2263,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
     delete:
       tags:
@@ -2199,11 +2289,12 @@ paths:
   # ────────────────────────────────────────
   # Attachments
   # ────────────────────────────────────────
+  # TODO: 未実装 — ファイルアップロード/削除機能
   /api/tasks/{taskId}/attachments:
     post:
       tags:
         - Attachments
-      summary: ファイルアップロード
+      summary: ファイルアップロード（未実装）
       description: |
         タスクにファイルを添付する。
         - 対応形式: image/jpeg, image/png, image/gif, image/webp, application/pdf, text/plain, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
@@ -2251,8 +2342,10 @@ paths:
     delete:
       tags:
         - Attachments
-      summary: ファイル削除
-      description: 添付ファイルを削除する
+      summary: ファイル削除（未実装）
+      description: |
+        添付ファイルを削除する。
+        **※ 現在未実装。今後のフェーズで対応予定。**
       operationId: deleteAttachment
       parameters:
         - $ref: "#/components/parameters/AttachmentId"
@@ -2289,14 +2382,12 @@ paths:
           in: query
           schema:
             type: string
-            description: カンマ区切りで複数指定可（例: TODO,IN_PROGRESS）
-          description: ステータスでフィルター（複数選択可、カンマ区切り）
+          description: "ステータスでフィルター（複数選択可、カンマ区切り。例: TODO,IN_PROGRESS）"
         - name: priority
           in: query
           schema:
             type: string
-            description: カンマ区切りで複数指定可（例: HIGH,URGENT）
-          description: 優先度でフィルター（複数選択可、カンマ区切り）
+          description: "優先度でフィルター（複数選択可、カンマ区切り。例: HIGH,URGENT）"
         - name: assigneeId
           in: query
           schema:
@@ -2306,7 +2397,6 @@ paths:
           in: query
           schema:
             type: string
-            description: カンマ区切りで複数指定可
           description: カテゴリでフィルター（複数選択可、カンマ区切り）
         - name: dueDateFrom
           in: query
@@ -2417,10 +2507,12 @@ paths:
       tags:
         - Activity Logs
       summary: プロジェクトのアクティビティ
-      description: プロジェクト全体のアクティビティフィードを取得する
+      description: プロジェクト全体のアクティビティフィードを取得する。ページネーション対応
       operationId: listProjectActivities
       parameters:
         - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PerPageParam"
       responses:
         "200":
           description: アクティビティ一覧取得成功
@@ -2430,11 +2522,14 @@ paths:
                 type: object
                 required:
                   - data
+                  - pagination
                 properties:
                   data:
                     type: array
                     items:
                       $ref: "#/components/schemas/ActivityLog"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -2522,6 +2617,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
@@ -2585,14 +2682,61 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   # ────────────────────────────────────────
+  # Notifications (Cron)
+  # ────────────────────────────────────────
+  /api/notifications/due-soon:
+    post:
+      tags:
+        - Notifications
+      summary: 期限間近タスク通知生成（Cron用）
+      description: |
+        翌日が期限のタスクに対して TASK_DUE_SOON 通知を生成する。
+        CRON_SECRET を Authorization ヘッダーに渡す必要がある。
+      operationId: generateDueSoonNotifications
+      security:
+        - {} # CRON_SECRET による認証（Bearer ではない）
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "Bearer {CRON_SECRET}"
+      responses:
+        "200":
+          description: 通知生成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - count
+                    properties:
+                      count:
+                        type: integer
+                        description: 生成した通知の件数
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ────────────────────────────────────────
   # Audit Logs (Admin)
   # ────────────────────────────────────────
+  # TODO: 未実装 — 管理者向け監査ログ
   /api/admin/audit-logs:
     get:
       tags:
         - Admin
-      summary: 監査ログ一覧
-      description: 監査ログを取得する。ADMIN のみアクセス可能
+      summary: 監査ログ一覧（未実装）
+      description: |
+        監査ログを取得する。ADMIN のみアクセス可能。
+        **※ 現在未実装。今後のフェーズで対応予定。**
       operationId: listAuditLogs
       parameters:
         - $ref: "#/components/parameters/PageParam"
