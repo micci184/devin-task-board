@@ -49,8 +49,8 @@ export const GET = async (
     }
 
     const { searchParams } = request.nextUrl
-    const page = Math.max(1, Number(searchParams.get('page') ?? '1'))
-    const perPage = Math.min(50, Math.max(1, Number(searchParams.get('perPage') ?? '20')))
+    const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1)
+    const perPage = Math.min(50, Math.max(1, Number(searchParams.get('perPage') ?? '20') || 20))
     const skip = (page - 1) * perPage
 
     const [activities, total] = await Promise.all([
