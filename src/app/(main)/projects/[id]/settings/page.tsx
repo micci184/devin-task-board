@@ -8,6 +8,7 @@ import { InviteMemberForm } from '@/components/members/InviteMemberForm'
 import { MemberList } from '@/components/members/MemberList'
 import { CategoryForm } from '@/components/categories/CategoryForm'
 import { CategoryList } from '@/components/categories/CategoryList'
+import { ProjectNav } from '@/components/projects/ProjectNav'
 
 import type { ProjectRole } from '@prisma/client'
 
@@ -82,6 +83,10 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">プロジェクト設定</h1>
         <p className="text-sm text-foreground/60">{project.name} の設定</p>
+      </div>
+
+      <div className="mb-6">
+        <ProjectNav projectId={projectId} />
       </div>
 
       <div className="space-y-8">
