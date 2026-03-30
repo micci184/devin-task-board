@@ -26,6 +26,7 @@ export const GET = async (request: NextRequest) => {
       dueDateFrom: url.searchParams.get('dueDateFrom') || undefined,
       dueDateTo: url.searchParams.get('dueDateTo') || undefined,
     }
+    // status / priority / categoryId はカンマ区切りで複数指定可能
 
     const parsed = searchQuerySchema.safeParse(rawParams)
     if (!parsed.success) {
@@ -84,21 +85,21 @@ export const GET = async (request: NextRequest) => {
       orConditions.push({ id: { in: commentTaskIds } })
     }
 
-    // Build filter conditions
+    // Build filter conditions (status / priority / categoryId は配列対応)
     const andConditions: Record<string, unknown>[] = []
 
     if (status) {
-      andConditions.push({ status })
+      andConditions.push({ status: { in: status } })
     }
     if (priority) {
-      andConditions.push({ priority })
+      andConditions.push({ priority: { in: priority } })
     }
     if (assigneeId) {
       andConditions.push({ assigneeId })
     }
     if (categoryId) {
       andConditions.push({
-        taskCategories: { some: { categoryId } },
+        taskCategories: { some: { categoryId: { in: categoryId } } },
       })
     }
     if (dueDateFrom) {
