@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { Trash2, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 
 import { deleteProject } from '@/lib/actions/project'
@@ -30,10 +31,13 @@ export const ProjectDeleteSection = ({
       const result = await deleteProject(projectId)
       if (result?.error) {
         setError(result.error)
+        toast.error(result.error)
         setIsDeleting(false)
       }
     } catch {
-      setError(tCommon('unexpectedError'))
+      const msg = tCommon('unexpectedError')
+      setError(msg)
+      toast.error(msg)
       setIsDeleting(false)
     }
   }
