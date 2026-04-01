@@ -1,14 +1,29 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState, useEffect } from 'react'
 import Link from 'next/link'
 
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Key } from 'lucide-react'
+import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 
 import { createProject } from '@/lib/actions/project'
 
 import type { ProjectActionState } from '@/lib/actions/project'
+
+const generateProjectKeyPreview = (name: string): string => {
+  const trimmed = name.trim()
+  if (!trimmed) return ''
+  const words = trimmed.split(/\s+/)
+  if (words.length === 1) {
+    return words[0].substring(0, 3).toUpperCase()
+  }
+  return words
+    .map((w) => w.charAt(0))
+    .join('')
+    .toUpperCase()
+    .substring(0, 5)
+}
 
 export const ProjectCreateForm = () => {
   const t = useTranslations('projects')
@@ -17,6 +32,14 @@ export const ProjectCreateForm = () => {
     ProjectActionState | null,
     FormData
   >(createProject, null)
+  const [projectName, setProjectName] = useState('')
+  const keyPreview = generateProjectKeyPreview(projectName)
+
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error)
+    }
+  }, [state])
 
   return (
     <form action={formAction} className="space-y-6">
@@ -39,11 +62,19 @@ export const ProjectCreateForm = () => {
           type="text"
           required
           placeholder="例: Devin Task Board"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
           className="w-full rounded-md border border-foreground/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         />
-        <p className="text-xs text-foreground/50">
-          {t('autoGenerateKey')}
-        </p>
+        <div className="flex items-center gap-2 text-xs text-foreground/50">
+          <span>{t('autoGenerateKey')}</span>
+          {keyPreview && (
+            <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 font-mono text-xs font-semibold text-primary">
+              <Key size={12} />
+              {keyPreview}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
