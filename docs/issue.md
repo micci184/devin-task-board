@@ -12,9 +12,9 @@
 | Phase 0  | 環境構築           | 6        | 6/6 ✅    |
 | Phase 1  | 基盤・ドキュメント | 5        | 5/5 ✅    |
 | Phase 2  | コア機能           | 12       | 12/12 ✅  |
-| Phase 3  | 拡張機能           | 8        | 1/8       |
-| Phase 4  | UX・運用機能       | 13       | 0/13      |
-| **合計** |                    | **44**   | **24/44** |
+| Phase 3  | 拡張機能           | 8        | 6/8       |
+| Phase 4  | UX・運用機能       | 13       | 7/13      |
+| **合計** |                    | **44**   | **37/44** |
 
 ---
 
@@ -102,26 +102,26 @@
 | #   | タイトル                                      | Labels                                         | 対応US | Size     | Status |
 | --- | --------------------------------------------- | ---------------------------------------------- | ------ | -------- | ------ |
 | 21  | コメント機能（CRUD）                          | `phase:3`, `priority:high`, `type:fullstack`   | US-19  | `size:M` | ✅     |
-| 22  | コメント @メンション                          | `phase:3`, `priority:medium`, `type:fullstack` | US-19  | `size:M` |        |
+| 22  | コメント @メンション                          | `phase:3`, `priority:medium`, `type:fullstack` | US-19  | `size:M` | ✅     |
 | 23  | ファイル添付機能                              | `phase:3`, `priority:medium`, `type:fullstack` | US-21  | `size:L` |        |
-| 24  | グローバル検索                                | `phase:3`, `priority:high`, `type:fullstack`   | US-22  | `size:M` |        |
-| 25  | 検索フィルター                                | `phase:3`, `priority:medium`, `type:frontend`  | US-22  | `size:S` |        |
-| 26  | アクティビティログ（タスク）                  | `phase:3`, `priority:medium`, `type:fullstack` | US-23  | `size:M` |        |
-| 27  | アクティビティフィード（プロジェクト）        | `phase:3`, `priority:medium`, `type:fullstack` | US-24  | `size:S` |        |
-| 28  | ダッシュボード（サマリーカード + タスク一覧） | `phase:3`, `priority:high`, `type:fullstack`   | US-18  | `size:M` |        |
+| 24  | グローバル検索                                | `phase:3`, `priority:high`, `type:fullstack`   | US-22  | `size:M` | ✅     |
+| 25  | 検索フィルター                                | `phase:3`, `priority:medium`, `type:frontend`  | US-22  | `size:S` | ✅     |
+| 26  | アクティビティログ（タスク）                  | `phase:3`, `priority:medium`, `type:fullstack` | US-23  | `size:M` | ✅     |
+| 27  | アクティビティフィード（プロジェクト）        | `phase:3`, `priority:medium`, `type:fullstack` | US-24  | `size:S` | ✅     |
+| 28  | ダッシュボード（サマリーカード + タスク一覧） | `phase:3`, `priority:high`, `type:fullstack`   | US-18  | `size:M` | ✅     |
 
 ## Phase 4: UX・運用機能（13 Issue）
 
 | #   | タイトル                                          | Labels                                         | 対応US | Size     | Status |
 | --- | ------------------------------------------------- | ---------------------------------------------- | ------ | -------- | ------ |
-| 51  | ダッシュボード（グラフ + アクティビティフィード） | `phase:4`, `priority:high`, `type:frontend`    | US-18  | `size:M` |        |
-| 29  | ガントチャート（基本表示）                        | `phase:4`, `priority:medium`, `type:frontend`  | US-17  | `size:L` |        |
-| 52  | ガントチャート（インタラクション + グルーピング） | `phase:4`, `priority:medium`, `type:frontend`  | US-17  | `size:M` |        |
-| 30  | 通知生成 API + トリガー                           | `phase:4`, `priority:high`, `type:backend`     | US-25  | `size:M` |        |
-| 59  | 通知 UI（ベルアイコン + 通知一覧画面）            | `phase:4`, `priority:high`, `type:frontend`    | US-25  | `size:M` |        |
-| 53  | 通知の既読管理（既読/未読切替 + 一括既読）        | `phase:4`, `priority:medium`, `type:fullstack` | US-25  | `size:S` |        |
+| 51  | ダッシュボード（グラフ + アクティビティフィード） | `phase:4`, `priority:high`, `type:frontend`    | US-18  | `size:M` | ✅     |
+| 29  | ガントチャート（基本表示）                        | `phase:4`, `priority:medium`, `type:frontend`  | US-17  | `size:L` | ✅     |
+| 52  | ガントチャート（インタラクション + グルーピング） | `phase:4`, `priority:medium`, `type:frontend`  | US-17  | `size:M` | ✅     |
+| 30  | 通知生成 API + トリガー                           | `phase:4`, `priority:high`, `type:backend`     | US-25  | `size:M` | ✅     |
+| 59  | 通知 UI（ベルアイコン + 通知一覧画面）            | `phase:4`, `priority:high`, `type:frontend`    | US-25  | `size:M` | ✅     |
+| 53  | 通知の既読管理（既読/未読切替 + 一括既読）        | `phase:4`, `priority:medium`, `type:fullstack` | US-25  | `size:S` | ✅     |
 | 31  | メール通知（Resend）                              | `phase:4`, `priority:medium`, `type:backend`   | US-26  | `size:M` |        |
-| 32  | 多言語対応セットアップ + 認証・レイアウト翻訳     | `phase:4`, `priority:medium`, `type:fullstack` | US-27  | `size:M` |        |
+| 32  | 多言語対応セットアップ + 認証・レイアウト翻訳     | `phase:4`, `priority:medium`, `type:fullstack` | US-27  | `size:M` | ✅     |
 | 54  | 多言語対応（残りの全画面翻訳）                    | `phase:4`, `priority:medium`, `type:frontend`  | US-27  | `size:M` |        |
 | 33  | ダークモード                                      | `phase:4`, `priority:medium`, `type:frontend`  | US-28  | `size:S` |        |
 | 34  | 監査ログ（管理者画面）                            | `phase:4`, `priority:low`, `type:fullstack`    | US-29  | `size:M` |        |
